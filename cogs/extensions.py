@@ -128,7 +128,7 @@ async def install_repo(interaction: discord.Interaction, repo: str, repo_name: s
     if os.path.exists(dependencies):
         await LOGGER.info(f"Downloaded {repo_name} from {repo}.", interaction)
         await LOGGER.info("Found dependencies. Installing...", interaction)
-        dependencies = jsonIO.load(interaction, dependencies)
+        dependencies = jsonIO.load(dependencies)
         await install_dependencies(interaction, dependencies)
         await LOGGER.info("Dependencies installed.", interaction)
     else:
