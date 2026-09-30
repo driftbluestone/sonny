@@ -1,12 +1,14 @@
-extern crate reg;
 extern crate serenity;
 extern crate ctor;
 extern crate registry;
+extern crate reg;
+
 use serenity::model::prelude::*;
 use serenity::prelude::*;
 use serenity::Client;
-mod discord;
 use reg::event;
+
+mod discord;
 
 #[tokio::main]
 async fn main() {
@@ -19,8 +21,8 @@ async fn main() {
 static TOKEN: &str = "";
 
 #[event(message)]
-async fn on_message(context: &mut Context, msg: &mut Message) {
+async fn on_message(context: Context, msg: Message) {
     if msg.content == "!ping" {
-        let _ = msg.channel_id.say(&*context, "Pong!").await;
+        let _ = msg.channel_id.say(&context, "Pong!").await;
     }
 }
