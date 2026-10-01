@@ -7,8 +7,44 @@ extern crate rand;
 extern crate serenity;
 
 use proc_macro::TokenStream;
+use quote::ToTokens;
 use rand::RngExt;
-use syn::{parse_macro_input, ItemFn, FnArg, Pat};
+use serenity::all::{CommandOptionType, CreateCommand, CreateCommandOption};
+use syn::{FnArg, ItemFn, Pat, parse_macro_input};
+use phf::phf_map;
+
+const ARG_TYPE: phf::Map<&'static str, CommandOptionType> = phf_map! {
+    // String Types
+    "&str" => CommandOptionType::String,
+    "String" => CommandOptionType::String,
+    /* Numeric Types */
+    // Signed Ints
+    "i8" => CommandOptionType::Integer,
+    "i16" => CommandOptionType::Integer,
+    "i32" => CommandOptionType::Integer,
+    "i64" => CommandOptionType::Integer,
+    "i128" => CommandOptionType::Integer,
+    // Unsigned Ints
+    "u8" => CommandOptionType::Integer,
+    "u16" => CommandOptionType::Integer,
+    "u32" => CommandOptionType::Integer,
+    "u64" => CommandOptionType::Integer,
+    "u128" => CommandOptionType::Integer,
+    // Floats
+    "f16" => CommandOptionType::Number,
+    "f32" => CommandOptionType::Number,
+    "f64" => CommandOptionType::Number,
+    "f128" => CommandOptionType::Number,
+    // Boolean
+    "bool" => CommandOptionType::Boolean,
+    // Discord Types
+    "User" => CommandOptionType::User,
+    "Member" => CommandOptionType::User,
+    "Channel" => CommandOptionType::Channel,
+    "Role" => CommandOptionType::Role,
+    "Mentionable" => CommandOptionType::Mentionable,
+    "Attatchment" => CommandOptionType::Attachment
+};
 
 #[proc_macro_attribute]
 pub fn cmd(attr: TokenStream, item: TokenStream) -> TokenStream {
@@ -38,8 +74,29 @@ pub fn event(attr: TokenStream, item: TokenStream) -> TokenStream {
     let mut downcasts = Vec::new();
     let mut arg_names = Vec::new();
 
+    let is_slash_command: bool = key.starts_with("/");
+    let mut slash_cmd: CreateCommand = CreateCommand::new(&key);
+    slash_cmd = slash_cmd.description("test");
     for arg in &input_fn.sig.inputs {
         if let FnArg::Typed(pat_type) = arg {
+            if is_slash_command {
+                println!("registering slash command!");
+                let t_s: String = pat_type.ty.to_token_stream().to_string();
+                
+                let t_v: Vec<&str> = t_s.split(" ").collect();
+                let mut t: &str = t_v[t_v.len() - 1];
+                let mut is_req: bool = true;
+                println!("{t}");
+                println!("{}", &key);
+                if t.starts_with("Option<") {
+                    t = &t[7..t.len()-1];
+                    is_req = false;
+                }
+                if let Some(cmd_opt_type) = ARG_TYPE.get(t) {
+                    slash_cmd = slash_cmd.add_option(CreateCommandOption::new(*cmd_opt_type, (*pat_type.clone().pat).to_token_stream().to_string(), "...").required(is_req));
+                }
+            }
+
             if let Pat::Ident(pat_ident) = &*pat_type.pat {
                 let arg_ident = &pat_ident.ident;
                 let arg_type = &pat_type.ty;
@@ -53,6 +110,10 @@ pub fn event(attr: TokenStream, item: TokenStream) -> TokenStream {
                 arg_names.push(quote::quote! { #arg_ident });
             }
         }
+    }
+
+    if is_slash_command {
+        registry::register_acmd_create(slash_cmd);
     }
 
     let expanded = quote::quote! {
@@ -69,7 +130,7 @@ pub fn event(attr: TokenStream, item: TokenStream) -> TokenStream {
 
         #[::reg::__private::ctor::ctor(unsafe, crate_path = ::reg::__private::ctor)]
         fn #ctor_name() {
-            if #key.starts_with("/") {
+            if #is_slash_command {
                 ::reg::register_acmd(&#key[1..], #shim_name)
             } else if #key.starts_with("!") {
                 ::reg::register_cmd(&#key[1..], #shim_name)

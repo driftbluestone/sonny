@@ -1,4 +1,4 @@
-pub use pma::{event, cmd, acmd};
+pub use pma::*;
 pub use registry::*;
 
 #[doc(hidden)]
@@ -58,4 +58,26 @@ async fn on_command(ctx: Context, msg: Message) {
         old_cmd = cmd;
     }
     run_cmd!(&*old_cmd, ctx, msg);
+}
+
+#[event(ready)]
+async fn ready(ctx: Context, _data_about_bot: Ready) {
+    let test_guild_id = GuildId::new(1355369059037745373);
+    println!("e");
+    
+    let cmds = {
+        match TO_REG.lock() {
+            Ok(mut registry) => {
+                println!("{}", registry.len());
+                std::mem::take(&mut *registry) 
+            },
+            Err(_) => Vec::new(),
+        }
+    };
+
+    match test_guild_id.set_commands(&ctx.http, cmds).await {
+        Err(why) => println!("Error registering commands: {:?}", why),
+        Ok(res) => println!("{}", res.len())
+    }
+    println!("e");
 }

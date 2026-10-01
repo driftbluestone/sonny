@@ -1,6 +1,6 @@
 use std::{any::Any, collections::HashMap, future::Future, pin::Pin, sync::{LazyLock, Mutex}};
 use tokio;
-use serenity::all::ShardStageUpdateEvent;
+use serenity::all::{CreateCommand, ShardStageUpdateEvent};
 use serenity::model::prelude::*;
 use serenity::prelude::*;
 
@@ -9,6 +9,8 @@ pub static EVENT_REG: LazyLock<Mutex<HashMap<&'static str, Vec<fn(Vec<Box<dyn An
 pub static CMD_REG: LazyLock<Mutex<HashMap<&'static str, fn(Vec<Box<dyn Any + Send + Sync>>) -> Pin<Box<dyn Future<Output = ()> + Send + 'static>>>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
 pub static ACMD_REG: LazyLock<Mutex<HashMap<&'static str, fn(Vec<Box<dyn Any + Send + Sync>>) -> Pin<Box<dyn Future<Output = ()> + Send + 'static>>>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
+
+pub static TO_REG: LazyLock<Mutex<Vec<CreateCommand>>> = LazyLock::new(|| {Mutex::new(Vec::new())});
 
 pub fn register_event(
     key: &'static str, 
@@ -29,12 +31,20 @@ pub fn register_cmd(
 }
 
 pub fn register_acmd(
-    key: &'static str, 
+    key: &'static str,
     f: fn(Vec<Box<dyn Any + Send + Sync>>) -> std::pin::Pin<Box<dyn std::future::Future<Output = ()> + Send + 'static>>
 ) {
     if let Ok(mut registry) = ACMD_REG.lock() {
         registry.insert(key, f);
     }
+}
+
+pub fn register_acmd_create(create_cmd: CreateCommand) {
+    if let Ok(mut registry) = TO_REG.lock() {
+        registry.push(create_cmd);
+        println!("{}", registry.len());
+    }
+    println!("mutex'd registry");
 }
 
 macro_rules! run_event {
@@ -54,8 +64,8 @@ macro_rules! run_event {
     }};
 }
 
+/* The Cursed Zone */
 pub struct Handler;
-
 #[serenity::async_trait]
 impl EventHandler for Handler {
     /* Macro rules for every event */
