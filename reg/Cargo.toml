@@ -3,13 +3,7 @@ name = "reg"
 version = "0.1.0"
 edition = "2024"
 
-[lib]
-proc-macro = true
-
 [dependencies]
-registry = { path = "../registry" }
-serenity = "0.12.5"
+pma = { path = "./pma" }
+registry = { path = "./registry" }
 ctor = "1.0.13"
-syn = "3.0.6"
-quote = "1.0.47"
-rand = "0.10.3"

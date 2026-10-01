@@ -5,7 +5,5 @@ edition = "2024"
 
 [dependencies]
 reg = { path = "../reg" }
-registry = { path = "../registry" }
-ctor = "1.0.13"
 serenity = "0.12.5"
 tokio = { version = "1", features = ["full"] }

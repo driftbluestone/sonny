@@ -1,0 +1,16 @@
+[package]
+name = "pma"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+registry = { path = "../registry" }
+tokio = { version = "1", features = ["full"] }
+serenity = "0.12.5"
+ctor = "1.0.13"
+syn = "3.0.6"
+quote = "1.0.47"
+rand = "0.10.3"
