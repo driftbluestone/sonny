@@ -18,10 +18,10 @@ static TOKEN: &str = "";
 
 #[cmd(ping)]
 async fn ping(ctx: Context, msg: Message) {
-    let _ = msg.reply(&ctx, "Pong!").await;
+    let _ = msg.reply_mention(&ctx, "Pong!").await;
 }
 
 #[cmd(ping me)]
 async fn ppp(ctx: Context, msg: Message) {
-    let _ = msg.reply(&ctx, "get pong'd").await;
+    let _ = msg.reply_mention(&ctx, "get pong'd").await;
 }

@@ -1111,6 +1111,8 @@ dependencies = [
  "ctor",
  "pma",
  "registry",
+ "serenity",
+ "tokio",
 ]
 
 [[package]]
