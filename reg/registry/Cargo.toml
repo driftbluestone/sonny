@@ -6,3 +6,4 @@ edition = "2024"
 [dependencies]
 tokio = { version = "1", features = ["full"] }
 serenity = "0.12.5"
+phf = { version = "0.14.0", features = ["macros"]}

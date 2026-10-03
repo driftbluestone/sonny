@@ -959,7 +959,6 @@ name = "pma"
 version = "0.1.0"
 dependencies = [
  "ctor",
- "phf",
  "quote",
  "rand 0.10.3",
  "registry",
@@ -1156,6 +1155,7 @@ dependencies = [
  "pma",
  "registry",
  "serenity",
+ "syn 3.0.6",
  "tokio",
 ]
 
@@ -1163,6 +1163,7 @@ dependencies = [
 name = "registry"
 version = "0.1.0"
 dependencies = [
+ "phf",
  "serenity",
  "tokio",
 ]

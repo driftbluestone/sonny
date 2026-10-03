@@ -1,4 +1,5 @@
 use std::{any::Any, collections::HashMap, future::Future, pin::Pin, sync::{LazyLock, Mutex}};
+use phf::phf_map;
 use tokio;
 use serenity::all::{CreateCommand, ShardStageUpdateEvent};
 use serenity::model::prelude::*;
@@ -9,6 +10,8 @@ pub static EVENT_REG: LazyLock<Mutex<HashMap<&'static str, Vec<fn(Vec<Box<dyn An
 pub static CMD_REG: LazyLock<Mutex<HashMap<&'static str, fn(Vec<Box<dyn Any + Send + Sync>>) -> Pin<Box<dyn Future<Output = ()> + Send + 'static>>>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
 pub static ACMD_REG: LazyLock<Mutex<HashMap<&'static str, fn(Vec<Box<dyn Any + Send + Sync>>) -> Pin<Box<dyn Future<Output = ()> + Send + 'static>>>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
+
+pub static ACMD_TYPE_REG: LazyLock<Mutex<HashMap<&'static str, Vec<String>>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
 pub static TO_REG: LazyLock<Mutex<Vec<CreateCommand>>> = LazyLock::new(|| {Mutex::new(Vec::new())});
 
@@ -39,12 +42,13 @@ pub fn register_acmd(
     }
 }
 
-pub fn register_acmd_create(create_cmd: CreateCommand) {
+pub fn register_acmd_create(create_cmd: CreateCommand, key: &'static str, arg_types: Vec<String>) {
     if let Ok(mut registry) = TO_REG.lock() {
         registry.push(create_cmd);
-        println!("{}", registry.len());
     }
-    println!("mutex'd registry");
+    if let Ok(mut registry) = ACMD_TYPE_REG.lock() {
+        registry.insert(key, arg_types);
+    }
 }
 
 macro_rules! run_event {
@@ -63,6 +67,46 @@ macro_rules! run_event {
         }
     }};
 }
+
+pub const ARG_TYPE: phf::Map<&'static str, CommandOptionType> = phf_map! {
+    // String Types
+    "&str" => CommandOptionType::String,
+    "String" => CommandOptionType::String,
+    /* Numeric Types */
+    // Signed Ints
+    "i8" => CommandOptionType::Integer,
+    "i16" => CommandOptionType::Integer,
+    "i32" => CommandOptionType::Integer,
+    "i64" => CommandOptionType::Integer,
+    "i128" => CommandOptionType::Integer,
+    // Unsigned Ints
+    "u8" => CommandOptionType::Integer,
+    "u16" => CommandOptionType::Integer,
+    "u32" => CommandOptionType::Integer,
+    "u64" => CommandOptionType::Integer,
+    "u128" => CommandOptionType::Integer,
+    // Floats
+    "f16" => CommandOptionType::Number,
+    "f32" => CommandOptionType::Number,
+    "f64" => CommandOptionType::Number,
+    "f128" => CommandOptionType::Number,
+    // Boolean
+    "bool" => CommandOptionType::Boolean,
+    /* Discord Types */
+    // User Types
+    "User" => CommandOptionType::User,
+    "UserId" => CommandOptionType::User,
+    "Member" => CommandOptionType::User,
+    // Channels
+    "Channel" => CommandOptionType::Channel,
+    "ChannelId" => CommandOptionType::Channel,
+    // Mentionable
+    "Role" => CommandOptionType::Role,
+    "RoleId" => CommandOptionType::Role,
+    "Mentionable" => CommandOptionType::Mentionable,
+    // Other
+    "AttatchmentId" => CommandOptionType::Attachment
+};
 
 /* The Cursed Zone */
 pub struct Handler;

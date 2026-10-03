@@ -14,4 +14,3 @@ ctor = "1.0.13"
 syn = "3.0.6"
 quote = "1.0.47"
 rand = "0.10.3"
-phf = { version = "0.14.0", features = ["macros"]}
