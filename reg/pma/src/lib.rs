@@ -47,18 +47,22 @@ pub fn event(attr: TokenStream, item: TokenStream) -> TokenStream {
         if let FnArg::Typed(pat_type) = arg {
             if is_slash_command {
                 let t: String = pat_type.ty.to_token_stream().to_string();
-                
-                let t: std::str::Split<'_, &str> = t.split(" ");
-                let t: Vec<&str> = t.collect();
-                let mut t: &str = t[t.len() - 1];
                 let mut is_req: bool = true;
-                if t.starts_with("Option<") {
-                    t = &t[7..t.len()-1];
+                if t.starts_with("Option") {
                     is_req = false;
                 }
+                let t: std::str::Split<'_, &str> = t.split(" ");
+                let t: Vec<&str> = t.collect();
+                let t_s: &str;
+                if t.len() > 1 {
+                    t_s = t[t.len() - 2];
+                } else {
+                    t_s = t[0];
+                }
                 
-                if let Some(_) = registry::ARG_TYPE.get(t) {
-                    args.push(t.to_string());
+                
+                if let Some(_) = registry::ARG_TYPE.get(t_s) {
+                    args.push(t_s.to_string());
                     is_reqs.push(is_req);
                     pat_types.push((*pat_type.clone().pat).to_token_stream().to_string());
                 }
@@ -82,7 +86,6 @@ pub fn event(attr: TokenStream, item: TokenStream) -> TokenStream {
     let expanded = quote::quote! {
         #fn_vis #input_fn
 
-
         fn #shim_name(args: Vec<Box<dyn std::any::Any + Send + Sync>>) -> std::pin::Pin<Box<dyn std::future::Future<Output = ()> + Send + 'static>> {
             Box::pin(async move {
                 let mut args_iter = args.into_iter();
@@ -98,14 +101,13 @@ pub fn event(attr: TokenStream, item: TokenStream) -> TokenStream {
                 let args_rt: Vec<(&str, bool, &str)> = vec![
                     #( (#args, #is_reqs, #pat_types) ),*
                 ];
-                let arg_types: Vec<String> = vec![
-                    #( #args.to_string(),),*
-                ];
+                let mut arg_types: Vec<(String, String, bool)> = Vec::new();
                 let mut slash_cmd: serenity::all::CreateCommand = serenity::all::CreateCommand::new(&#key[1..]);
                 slash_cmd = slash_cmd.description("...");
                 for (arg, is_req, pat_type) in args_rt {
                     if let Some(cmd_opt_type) = ::reg::ARG_TYPE.get(arg) {
                         slash_cmd = slash_cmd.add_option(serenity::all::CreateCommandOption::new(*cmd_opt_type, pat_type, "...").required(is_req));
+                        arg_types.push((pat_type.to_string(), arg.to_string(), is_req));
                     }
                 }
                 ::reg::register_acmd_create(slash_cmd, &#key[1..], arg_types);

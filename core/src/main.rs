@@ -17,6 +17,11 @@ async fn main() {
 static TOKEN: &str = "";
 
 #[acmd(test)]
-async fn g(ctx: Context, interaction: CommandInteraction, num: User) {
-    let _ = interaction.response(&ctx, &format!("hi {}", num.name), false).await;
+async fn g(ctx: Context, interaction: CommandInteraction, num: Option<User>) {
+    if let Some(user) = num {
+        let _ = interaction.response(&ctx, &format!("hi {}", user.name), false).await;
+    } else {
+        let _ = interaction.response(&ctx, &format!("hi"), false).await;
+    }
+    
 }

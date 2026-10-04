@@ -11,7 +11,7 @@ pub static CMD_REG: LazyLock<Mutex<HashMap<&'static str, fn(Vec<Box<dyn Any + Se
 
 pub static ACMD_REG: LazyLock<Mutex<HashMap<&'static str, fn(Vec<Box<dyn Any + Send + Sync>>) -> Pin<Box<dyn Future<Output = ()> + Send + 'static>>>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
-pub static ACMD_TYPE_REG: LazyLock<Mutex<HashMap<&'static str, Vec<String>>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
+pub static ACMD_TYPE_REG: LazyLock<Mutex<HashMap<&'static str, Vec<(String, String, bool)>>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
 pub static TO_REG: LazyLock<Mutex<Vec<CreateCommand>>> = LazyLock::new(|| {Mutex::new(Vec::new())});
 
@@ -42,7 +42,7 @@ pub fn register_acmd(
     }
 }
 
-pub fn register_acmd_create(create_cmd: CreateCommand, key: &'static str, arg_types: Vec<String>) {
+pub fn register_acmd_create(create_cmd: CreateCommand, key: &'static str, arg_types: Vec<(String, String, bool)>) {
     if let Ok(mut registry) = TO_REG.lock() {
         registry.push(create_cmd);
     }
@@ -51,6 +51,7 @@ pub fn register_acmd_create(create_cmd: CreateCommand, key: &'static str, arg_ty
     }
 }
 
+#[macro_export]
 macro_rules! run_event {
     ($event_type:literal, $($args:expr),*) => {{
         if let Ok(registry) = EVENT_REG.lock() {
