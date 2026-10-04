@@ -9,19 +9,18 @@ use reg::*;
 #[tokio::main]
 async fn main() {
     let mut client =
-        Client::builder(TOKEN, GatewayIntents::all()).event_handler(reg::Handler).await.unwrap();
+        Client::builder(TOKEN, GatewayIntents::all()).event_handler(Handler).await.unwrap();
 
     client.start().await.unwrap();
 }
 
 static TOKEN: &str = "";
 
-#[acmd(test)]
+#[acmd]
 async fn g(ctx: Context, interaction: CommandInteraction, num: Option<User>) {
     if let Some(user) = num {
         let _ = interaction.response(&ctx, &format!("hi {}", user.name), false).await;
     } else {
         let _ = interaction.response(&ctx, &format!("hi"), false).await;
     }
-    
 }
