@@ -82,7 +82,6 @@ pub fn event(attr: TokenStream, item: TokenStream) -> TokenStream {
         let arg = &input_fn.sig.inputs[i];
         if let FnArg::Typed(pat_type) = arg {
             if is_slash_command {
-                println!("{i}");
                 let t: String = pat_type.ty.to_token_stream().to_string();
                 let mut is_req: bool = true;
                 if t.starts_with("Option") {

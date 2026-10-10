@@ -7,3 +7,5 @@ edition = "2024"
 reg = { path = "../reg" }
 serenity = "0.12.5"
 tokio = { version = "1", features = ["full"] }
+tokio-postgres = { version = "0.7", features = ["with-serde_json-1"] }
+serde_json = "1.0"

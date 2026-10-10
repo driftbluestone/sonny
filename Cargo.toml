@@ -1,4 +1,7 @@
 [workspace]
 resolver = "3"
-members = ["core",
-    "reg"]
+members = [
+    "parent",
+    "core",
+    "reg"
+]
