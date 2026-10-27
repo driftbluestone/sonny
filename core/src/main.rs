@@ -2,16 +2,16 @@ extern crate serenity;
 extern crate reg;
 
 use std::sync::LazyLock;
-
 use tokio::io::{self, AsyncBufReadExt, BufReader};
 use serenity::model::prelude::*;
 use serenity::prelude::*;
-use serenity::Client;
 use reg::*;
 use tokio::sync::Notify;
 
 static KEY: LazyLock<std::sync::Mutex<String>> = LazyLock::new( || {std::sync::Mutex::new(String::new())});
 static NOTIF: LazyLock<Notify> = LazyLock::new(|| {Notify::new()});
+
+static TOKEN: &str = "";
 
 #[tokio::main]
 async fn main() {
@@ -38,6 +38,12 @@ async fn main() {
     let _ = reader.read_line(&mut String::new()).await;
 }
 
+/*
+#[event(ready)]
+async fn ready(ctx: Context, data_about_bot: Ready) {
+    data_about_bot.session_id;
+}
+*/
 #[event(reconn)]
 async fn reconn(ctx: Context, event: ResumedEvent) {
     if !reg::INSTANCE_ENABLED.load(std::sync::atomic::Ordering::Relaxed) {
@@ -49,8 +55,6 @@ async fn reconn(ctx: Context, event: ResumedEvent) {
     }
     run_event!("resume", ctx, event);
 }
-
-static TOKEN: &str = "";
 
 #[acmd]
 async fn g(ctx: Context, interaction: CommandInteraction, num: Option<User>) {
