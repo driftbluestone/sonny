@@ -2,9 +2,9 @@ import discord, traceback, psycopg
 from discord.ext import commands
 from modules import editing, message_embed
 from db import db, permission
-from utils import logger, utils
+from utils import utils
+from utils.logger import log
 from utils.utils import bot
-LOGGER = logger.Logger()
 
 if len(utils.bot_config["bot_admins"]) == 0:
     admin = input("Paste user id for bot admin (optional): ")
@@ -17,7 +17,7 @@ if len(utils.bot_config["bot_admins"]) == 0:
 
 @bot.event
 async def on_ready():
-    await LOGGER.info(f"Logged in as {bot.user}.")
+    await log.info(f"Logged in as {bot.user}.")
     for guild in bot.guilds:
         in_db = db.get("permissions", (guild.id, 0, "#:manage_extensions"), ("server_id", "id", "permission"), ("value",))
         if in_db is None:
@@ -73,23 +73,23 @@ async def on_command_error(ctx: commands.Context, error: Exception):
         elif isinstance(error, commands.CheckFailure):
             return
 
-        await LOGGER.error("".join(traceback.format_exception(error)))
+        await log.error("".join(traceback.format_exception(error)))
         await ctx.channel.send("An unexpected command error occured.")
         raise error
     
     error = error.original
     if isinstance(error, psycopg.errors.InFailedSqlTransaction):
         db.connection.rollback()
-        await LOGGER.error("".join(traceback.format_exception(error)))
+        await log.error("".join(traceback.format_exception(error)))
         await ctx.channel.send("An unexpected database error occured.")
         
     elif isinstance(error, RecursionError):
         return await ctx.reply("Error: Recursion limit reached.")
     
     else:
-        await LOGGER.error("".join(traceback.format_exception(error)))
+        await log.error("".join(traceback.format_exception(error)))
         await ctx.channel.send("An unexpected error occured.")
         raise error
         
 
-bot.run(utils.data["TOKEN"])
+bot.run(utils.data["TOKEN"], log_handler=None)

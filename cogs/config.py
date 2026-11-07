@@ -127,17 +127,17 @@ class Config(commands.Cog):
 
     @botadmin.command(name="sync-commands", description=botadmin.description)
     async def sync_commands(self, interaction):
-        await extensions.LOGGER.info(f"Syncing commands...", interaction)
+        await extensions.log.info(f"Syncing commands...", interaction)
         try:
             synced = await self.bot.tree.sync()
-            await extensions.LOGGER.info(f"Synced {len(synced)} commands.", interaction)
+            await extensions.log.info(f"Synced {len(synced)} commands.", interaction)
         except Exception as e:
-            await extensions.LOGGER.error(f"Error syncing commands: {e}", interaction)
-        await extensions.LOGGER.info(f"Syncing per-server commands...", interaction)
+            await extensions.log.error(f"Error syncing commands: {e}", interaction)
+        await extensions.log.info(f"Syncing per-server commands...", interaction)
         extensions_list = db.multiple(f"SELECT * FROM {db.SCHEMA.as_string()}.extensions WHERE server_id != 0")
         for server_id, extension in extensions_list:
             await extensions.sync(extension, discord.Object(id=server_id))
-        await extensions.LOGGER.info(f"Synced per-server commands.\nSync complete!", interaction)
+        await extensions.log.info(f"Synced per-server commands.\nSync complete!", interaction)
 
 class FileView(gui.PageUI):
     def __init__(self, workdir, page: int = 1):
