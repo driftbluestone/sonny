@@ -1,4 +1,4 @@
-import discord, logging
+import discord, logging, sys
 from pathlib import Path
 
 DIR = Path(__file__).parent.parent.resolve()
@@ -6,12 +6,15 @@ DIR = Path(__file__).parent.parent.resolve()
 class Logger:
     def __init__(self, name: str = ":"):
         logging.basicConfig(
-            filename=f"{DIR}/data/.log",
             level=logging.DEBUG,
-            filemode='w',
-            format='%(asctime)s [%(levelname)-8s] %(message)s',
-            datefmt='%Y-%m-%d %H:%M:%S'
+            format='%(asctime)s [%(levelname)-5s] %(message)s',
+            datefmt='%Y-%m-%d %H:%M:%S',
+            handlers=[
+                logging.FileHandler(f"{DIR}/data/.log", mode='w'),
+                logging.StreamHandler(sys.stdout),
+            ]
         )
+        logging.getLogger("discord").setLevel(logging.INFO)
         self._logger = logging.getLogger(name)
         self.buffers = {}
 
@@ -49,7 +52,7 @@ class Logger:
         await self._log(msg, logging.WARNING, i)
 
     async def warn(self, msg: str, i: discord.Interaction | None = None) -> None:
-        await self.warning(msg, i)
+        await self._log(msg, logging.WARN, i)
 
     async def error(self, msg: str, i: discord.Interaction | None = None) -> None:
         await self._log(msg, logging.ERROR, i)
@@ -60,3 +63,4 @@ class Logger:
     def clear_buffer(self, interaction: discord.Interaction) -> None:
         if interaction.id in self.buffers:
             del self.buffers[interaction.id]
+log=Logger()

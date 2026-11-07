@@ -2,11 +2,11 @@ import discord, os, asyncio, importlib, sys, shutil, typing
 from discord import app_commands
 from discord.ext import commands
 from psycopg import sql
-from utils import jsonIO, logger
+from utils import jsonIO
+from utils.logger import log
 from utils.utils import DIR, bot, bot_config
 from db import db, server, users
 from api import gui
-LOGGER = logger.Logger()
 
 async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(Extensions(bot=bot))
@@ -20,9 +20,9 @@ async def setup(bot: commands.Bot) -> None:
     if STARTUP_SYNCING:
         try:
             synced = await bot.tree.sync()
-            await LOGGER.info(f"Synced {len(synced)} commands.")
+            await log.info(f"Synced {len(synced)} commands.")
         except Exception as e:
-            await LOGGER.error(f"Error syncing commands: {e}")
+            await log.error(f"Error syncing commands: {e}")
 
     files = os.listdir(f"{DIR}/extensions")
     extensions = list(server.extensions(0).keys())
@@ -31,7 +31,7 @@ async def setup(bot: commands.Bot) -> None:
             await init_extension(file)
         else:
             await bot.load_extension(f"extensions.{file}.main")
-    await LOGGER.info("Startup complete. All commands synced.")
+    await log.info("Startup complete. All commands synced.")
 
 class Extensions(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -121,36 +121,36 @@ class ExtensionManager(gui.PageUI):
 
 # internal extension installation functions
 async def install_repo(interaction: discord.Interaction, repo: str, repo_name: str):
-    await LOGGER.info(f"Downloading {repo_name} from {repo}...", interaction)
+    await log.info(f"Downloading {repo_name} from {repo}...", interaction)
     await subprocess(["git", "clone", repo, f"{DIR}/extensions/{repo_name}"])
 
     dependencies = f"{DIR}/extensions/{repo_name}/dependencies.json"
     if os.path.exists(dependencies):
-        await LOGGER.info(f"Downloaded {repo_name} from {repo}.", interaction)
-        await LOGGER.info("Found dependencies. Installing...", interaction)
+        await log.info(f"Downloaded {repo_name} from {repo}.", interaction)
+        await log.info("Found dependencies. Installing...", interaction)
         dependencies = jsonIO.load(dependencies)
         await install_dependencies(interaction, dependencies)
-        await LOGGER.info("Dependencies installed.", interaction)
+        await log.info("Dependencies installed.", interaction)
     else:
-        await LOGGER.info(f"Installed {repo_name} from {repo}.", interaction)
-    
+        await log.info(f"Installed {repo_name} from {repo}.", interaction)
+
 async def install_dependencies(interaction: discord.Interaction, dependencies: dict):
     if "pip" in dependencies:
         for package in dependencies["pip"]:
-            await LOGGER.info(f"pip dependency {package} found. Installing...", interaction)
+            await log.info(f"pip dependency {package} found. Installing...", interaction)
             await subprocess([sys.executable, "-m", "pip", "install", package])
-            await LOGGER.info(f"pip dependency {package} Installed.", interaction)
+            await log.info(f"pip dependency {package} Installed.", interaction)
 
     if "extension" in dependencies:
         for extension in dependencies["extension"]:
             extension_name = extension.split("/")[-1]
-            await LOGGER.info(f"Extension dependency {extension_name} found. Installing...", interaction)
+            await log.info(f"Extension dependency {extension_name} found. Installing...", interaction)
             await install_repo(interaction, extension, extension_name)
-            await LOGGER.info(f"Extension dependency {extension_name} Installed.", interaction)
+            await log.info(f"Extension dependency {extension_name} Installed.", interaction)
 
     if "other" in dependencies:
         for other in dependencies["other"]:
-            await LOGGER.warn(f"Other dependency '{other}' requires manual installation.", interaction)
+            await log.warn(f"Other dependency '{other}' requires manual installation.", interaction)
 
 async def subprocess(args):
     try:
@@ -160,9 +160,9 @@ async def subprocess(args):
             stderr=asyncio.subprocess.STDOUT
         )
         stdout, _ = await result.communicate()
-        await LOGGER.info(stdout.decode())
+        await log.info(stdout.decode())
     except Exception as e:
-        await LOGGER.warning(str(e))
+        await log.warn(str(e))
 
 async def init_extension(extension: str):
     try:
@@ -174,7 +174,7 @@ async def init_extension(extension: str):
     await bot.load_extension(f"extensions.{extension}.main")
     db.insert("extensions", ("server_id", "extension"), (), (0, extension))
 
-    await LOGGER.info(f"Initialized new extension: {extension}.")
+    await log.info(f"Initialized new extension: {extension}.")
 
 def memoize(func):
     cache = {}
@@ -258,7 +258,7 @@ async def uninstall(interaction: discord.Interaction, extension: str, save_data:
     shutil.rmtree(f'{DIR}/extensions/{extension}', onexc=_remove_readonly)
 
     if not silent:
-        await LOGGER.info(f":white_check_mark: Extension **{extension}** deleted.")
+        await log.info(f":white_check_mark: Extension **{extension}** deleted.")
         await interaction.followup.send(f":white_check_mark: Extension **{extension}** deleted.")
 
 def delete_data(extension):

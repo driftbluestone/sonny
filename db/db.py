@@ -3,13 +3,12 @@ from psycopg import sql
 from pathlib import Path
 from typing import Any
 from utils import jsonIO
-from utils.logger import Logger
+from utils.logger import log as logger
 
 DIR = Path(__file__).parent.parent.resolve()
 
 __all__ = ["SCHEMA", "run", "single", "multiple", "insert", "delete", "get"]
 
-logger = Logger()
 data = jsonIO.load(f"{DIR}/bot_info.json")["DB"]
 SCHEMA = data["SCHEMA"]
 
