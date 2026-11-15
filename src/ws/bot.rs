@@ -15,7 +15,7 @@ pub struct Bot {
     pub(in crate::ws) ws: Arc<Mutex<Option<WebSocketWriter>>>,
     pub(in crate::ws) intents: u64,
     pub(in crate::ws) token: String,
-    pub http_client: Arc<reqwest::Client>,
+    pub http: Arc<reqwest::Client>,
 
     pub(in crate::ws) auth: String,
 }
@@ -35,7 +35,7 @@ impl Bot {
             token: token.to_string(),
             intents: intents,
             ws: Arc::new(Mutex::new(None)),
-            http_client: Arc::new(reqwest::Client::new()),
+            http: Arc::new(reqwest::Client::new()),
 
             auth: format!("Bot {}", token),
         }
@@ -51,7 +51,7 @@ impl Bot {
 
     pub async fn start_blocking(&self) -> Result<(), Box<dyn Error + Send + Sync>> {
 
-        let response:reqwest::Response = self.http_client
+        let response:reqwest::Response = self.http
         .get(api!("/gateway/bot"))
         .header(AUTHORIZATION, &self.auth)
         .header(USER_AGENT, "DiscordBot (https://github.com/driftbluestone/sonny, 1.0.0)")
@@ -72,7 +72,7 @@ impl Bot {
             if let tokio_tungstenite::tungstenite::Message::Text(text) = msg? {
                 let json: serde_json::Value = serde_json::from_str(&text)?;
                 let op = json["op"].as_u64().unwrap_or(99);
-                self.op(op, json).await;
+                self.opcode(op, json).await;
                 /* decent impl example to save for later
                 if event_name == "MESSAGE_CREATE" {
                     let content = json["d"]["content"].as_str().unwrap_or("");

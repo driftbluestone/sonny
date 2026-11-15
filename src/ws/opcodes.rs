@@ -1,78 +1,82 @@
 use crate::ws::{structs::*, bot::*};
+
+type Json = serde_json::Value;
+
 pub trait Opcode {
-    async fn op(&self, op: u64, json: serde_json::Value);
+    async fn opcode(&self, op: u64, json: Json);
+    // opcode reference:
     // https://docs.discord.com/developers/topics/opcodes-and-status-codes#gateway
 
     // gateway opcodes
-    async fn op0(&self, json: serde_json::Value);
-    async fn op1(&self, json: serde_json::Value);
-    async fn op7(&self, json: serde_json::Value);
-    async fn op9(&self, json: serde_json::Value);
-    async fn op10(&self, json: serde_json::Value);
-    async fn op11(&self, json: serde_json::Value);
+    async fn opcode_0 (&self, content: Json);
+    async fn opcode_1 (&self, content: Json);
+    async fn opcode_7 (&self, content: Json);
+    async fn opcode_9 (&self, content: Json);
+    async fn opcode_10(&self, content: Json);
+    async fn opcode_11(&self, content: Json);
 
     // gateway event close codes
-    async fn op4000(&self, json: serde_json::Value);
-    async fn op4001(&self, json: serde_json::Value);
-    async fn op4002(&self, json: serde_json::Value);
-    async fn op4003(&self, json: serde_json::Value);
-    async fn op4004(&self, json: serde_json::Value);
-    async fn op4005(&self, json: serde_json::Value);
-    async fn op4006(&self, json: serde_json::Value);
-    async fn op4007(&self, json: serde_json::Value);
-    async fn op4008(&self, json: serde_json::Value);
-    async fn op4009(&self, json: serde_json::Value);
-    async fn op4010(&self, json: serde_json::Value);
-    async fn op4011(&self, json: serde_json::Value);
-    async fn op4012(&self, json: serde_json::Value);
-    async fn op4013(&self, json: serde_json::Value);
-    async fn op4014(&self, json: serde_json::Value);
+    async fn opcode_4000(&self, content: Json);
+    async fn opcode_4001(&self, content: Json);
+    async fn opcode_4002(&self, content: Json);
+    async fn opcode_4003(&self, content: Json);
+    async fn opcode_4004(&self, content: Json);
+    async fn opcode_4005(&self, content: Json);
+    async fn opcode_4006(&self, content: Json);
+    async fn opcode_4007(&self, content: Json);
+    async fn opcode_4008(&self, content: Json);
+    async fn opcode_4009(&self, content: Json);
+    async fn opcode_4010(&self, content: Json);
+    async fn opcode_4011(&self, content: Json);
+    async fn opcode_4012(&self, content: Json);
+    async fn opcode_4013(&self, content: Json);
+    async fn opcode_4014(&self, content: Json);
 
 }
 
 impl Opcode for Bot {
-    async fn op(&self, op: u64, json: serde_json::Value) {
+    async fn opcode(&self, op: u64, content: Json) {
         match op {
             // Some opcodes are meant to be sent TO
             // Discord, so they arent included.
-            0  => self.op0 (json).await,
-            1  => self.op1 (json).await,
-            7  => self.op7 (json).await,
-            9  => self.op9 (json).await,
-            10 => self.op10(json).await,
-            11 => self.op11(json).await,
+            0  => self.opcode_0 (content).await,
+            1  => self.opcode_1 (content).await,
+            7  => self.opcode_7 (content).await,
+            9  => self.opcode_9 (content).await,
+            10 => self.opcode_10(content).await,
+            11 => self.opcode_11(content).await,
 
-            4000 => self.op4000(json).await,
-            4001 => self.op4001(json).await,
-            4002 => self.op4002(json).await,
-            4003 => self.op4003(json).await,
-            4004 => self.op4004(json).await,
-            4005 => self.op4005(json).await,
-            4006 => self.op4006(json).await,
-            4007 => self.op4007(json).await,
-            4008 => self.op4008(json).await,
-            4009 => self.op4009(json).await,
-            4010 => self.op4010(json).await,
-            4011 => self.op4011(json).await,
-            4012 => self.op4012(json).await,
-            4013 => self.op4013(json).await,
-            4014 => self.op4014(json).await,
+            4000 => self.opcode_4000(content).await,
+            4001 => self.opcode_4001(content).await,
+            4002 => self.opcode_4002(content).await,
+            4003 => self.opcode_4003(content).await,
+            4004 => self.opcode_4004(content).await,
+            4005 => self.opcode_4005(content).await,
+            4006 => self.opcode_4006(content).await,
+            4007 => self.opcode_4007(content).await,
+            4008 => self.opcode_4008(content).await,
+            4009 => self.opcode_4009(content).await,
+            4010 => self.opcode_4010(content).await,
+            4011 => self.opcode_4011(content).await,
+            4012 => self.opcode_4012(content).await,
+            4013 => self.opcode_4013(content).await,
+            4014 => self.opcode_4014(content).await,
             _ => println!("Recieved unimplemented opcode: {}", op)
         }
     }
 
     // actual discord event
-    async fn op0(&self, json: serde_json::Value) { self.dispatch(json).await; }
+    async fn opcode_0(&self, content: Json) { self.dispatch(content).await; }
 
     // heartbeat on request
-    async fn op1(&self, _json: serde_json::Value) { self.send_hb().await; }
+    async fn opcode_1(&self, _content: Json) { self.send_hb().await; }
 
     // these mean that we need to try reconnecting
-    async fn op7(&self, _json: serde_json::Value) {}
-    async fn op9(&self, _json: serde_json::Value) {}
+    async fn opcode_7(&self, _content: Json) {}
+    async fn opcode_9(&self, _content: Json) {}
 
-    async fn op10(&self, json: serde_json::Value) {
-        let interval = json["d"]["heartbeat_interval"].as_u64().unwrap_or(41351);
+    async fn opcode_10(&self, content: Json) {
+        let interval = content["d"]["heartbeat_interval"].as_u64().unwrap_or(41351);
             println!("Received Hello. Heartbeat interval: {}ms", interval);
 
             // Send Identify (Opcode 2)
@@ -102,21 +106,21 @@ impl Opcode for Bot {
     // heartbeat ACK
     // should add some impl for when we go
     // ~3 heartbeats without any op11's
-    async fn op11(&self, _json: serde_json::Value) {}
+    async fn opcode_11(&self, _content: Json) {}
 
-    async fn op4000(&self, _json: serde_json::Value) {}
-    async fn op4001(&self, _json: serde_json::Value) {}
-    async fn op4002(&self, _json: serde_json::Value) {}
-    async fn op4003(&self, _json: serde_json::Value) {}
-    async fn op4004(&self, _json: serde_json::Value) {}
-    async fn op4005(&self, _json: serde_json::Value) {}
-    async fn op4006(&self, _json: serde_json::Value) {}
-    async fn op4007(&self, _json: serde_json::Value) {}
-    async fn op4008(&self, _json: serde_json::Value) {}
-    async fn op4009(&self, _json: serde_json::Value) {}
-    async fn op4010(&self, _json: serde_json::Value) {}
-    async fn op4011(&self, _json: serde_json::Value) {}
-    async fn op4012(&self, _json: serde_json::Value) {}
-    async fn op4013(&self, _json: serde_json::Value) {}
-    async fn op4014(&self, _json: serde_json::Value) {}
+    async fn opcode_4000(&self, _content: Json) {}
+    async fn opcode_4001(&self, _content: Json) {}
+    async fn opcode_4002(&self, _content: Json) {}
+    async fn opcode_4003(&self, _content: Json) {}
+    async fn opcode_4004(&self, _content: Json) {}
+    async fn opcode_4005(&self, _content: Json) {}
+    async fn opcode_4006(&self, _content: Json) {}
+    async fn opcode_4007(&self, _content: Json) {}
+    async fn opcode_4008(&self, _content: Json) {}
+    async fn opcode_4009(&self, _content: Json) {}
+    async fn opcode_4010(&self, _content: Json) {}
+    async fn opcode_4011(&self, _content: Json) {}
+    async fn opcode_4012(&self, _content: Json) {}
+    async fn opcode_4013(&self, _content: Json) {}
+    async fn opcode_4014(&self, _content: Json) {}
 }

@@ -1,3 +1,7 @@
+mod structs {
+    mod guild;
+    mod base;
+}
 mod ws {
     pub mod intents;
     pub mod bot;
