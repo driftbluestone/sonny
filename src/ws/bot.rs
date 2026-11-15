@@ -1,7 +1,7 @@
 use std::{error::Error, fmt::Write, sync::{Arc, atomic::{AtomicU64, Ordering::Relaxed}}};
 use futures_util::{SinkExt, StreamExt};
 use reqwest::header::{AUTHORIZATION, USER_AGENT};
-use tokio::{net::TcpStream, sync::RwLock, task::JoinHandle, time::{self, Duration}};
+use tokio::{net::TcpStream, sync::Mutex, task::JoinHandle, time::{self, Duration}};
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, tungstenite::Message::{self, Text}};
 
 use crate::ws::{structs::*, opcodes::Opcode};
@@ -12,9 +12,10 @@ pub type SequenceNum = Arc<AtomicU64>;
 #[derive(Clone)]
 pub struct Bot {
     pub(in crate::ws) s: SequenceNum,
-    pub(in crate::ws) ws: Arc<RwLock<Option<WebSocketWriter>>>,
+    pub(in crate::ws) ws: Arc<Mutex<Option<WebSocketWriter>>>,
     pub(in crate::ws) intents: u64,
-    pub(in crate::ws) token: String
+    pub(in crate::ws) token: String,
+    http_client: reqwest::Client,
 }
 
 // should be moved elsewhere, but where
@@ -31,7 +32,8 @@ impl Bot {
             s: Arc::new(AtomicU64::new(0)),
             token: token.to_string(),
             intents: intents,
-            ws: Arc::new(RwLock::new(None)),
+            ws: Arc::new(Mutex::new(None)),
+            http_client: reqwest::Client::new(),
         }
     }
 
@@ -44,10 +46,9 @@ impl Bot {
     }
 
     pub async fn start_blocking(&self) -> Result<(), Box<dyn Error + Send + Sync>> {
-        let client: reqwest::Client = reqwest::Client::new();
         let token = &self.token.clone();
 
-        let response:reqwest::Response = client
+        let response:reqwest::Response = self.http_client
         .get(api!("/gateway/bot"))
         .header(AUTHORIZATION, format!("Bot {}", token))
         .header(USER_AGENT, "DiscordBot (https://github.com/driftbluestone/sonny, 1.0.0)")
@@ -60,7 +61,7 @@ impl Bot {
         let url = format!("{}/?v=10&encoding=json", url.url);
         let (ws_stream, _) = tokio_tungstenite::connect_async(&url).await?;
         let (write, mut read) = ws_stream.split();
-        self.ws.write().await.replace(write);
+        self.ws.lock().await.replace(write);
         
         while let Some(msg) = read.next().await {
             if let tokio_tungstenite::tungstenite::Message::Text(text) = msg? {
@@ -124,6 +125,6 @@ impl Bot {
     }
 
     pub(in crate::ws) async fn send(&self, msg: Message) {
-        let _ = self.ws.write().await.as_mut().unwrap().send(msg).await;
+        let _ = self.ws.lock().await.as_mut().unwrap().send(msg).await;
     }
 }

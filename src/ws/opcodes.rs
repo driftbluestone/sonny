@@ -35,10 +35,10 @@ impl Opcode for Bot {
         match op {
             // Some opcodes are meant to be sent TO
             // Discord, so they arent included.
-            0 => self.op0(json).await,
-            1 => self.op1(json).await,
-            7 => self.op7(json).await,
-            9 => self.op9(json).await,
+            0  => self.op0 (json).await,
+            1  => self.op1 (json).await,
+            7  => self.op7 (json).await,
+            9  => self.op9 (json).await,
             10 => self.op10(json).await,
             11 => self.op11(json).await,
 
