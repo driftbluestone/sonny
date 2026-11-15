@@ -52,13 +52,20 @@ impl Bot {
     pub async fn start_blocking(&self) -> Result<(), Box<dyn Error + Send + Sync>> {
 
         let response:reqwest::Response = self.http
+        .get(api!("/guilds/1355369059037745373/members/887176924932210748"))
+        .header(AUTHORIZATION, &self.auth)
+        .header(USER_AGENT, "DiscordBot (https://github.com/driftbluestone/sonny, 1.0.0)")
+        .send().await?;
+        println!("{}", response.text().await?.trim().to_string());
+
+        let response:reqwest::Response = self.http
         .get(api!("/gateway/bot"))
         .header(AUTHORIZATION, &self.auth)
         .header(USER_AGENT, "DiscordBot (https://github.com/driftbluestone/sonny, 1.0.0)")
         .send().await?;
 
         
-        
+        // swap println for "proper" logging later
         println!("Status: {}", response.status());
         let body: String = response.text().await?.trim().to_string();
         println!("Response:\n{}", body);

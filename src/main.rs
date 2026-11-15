@@ -1,6 +1,6 @@
 mod structs {
-    mod guild;
     mod base;
+    mod user;
 }
 mod ws {
     pub mod intents;

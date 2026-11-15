@@ -1,4 +1,3 @@
-#![allow(non_camel_case_types)]
 #![allow(unused)]
 pub const GUILDS: u64 = 1 << 0;
 pub const GUILD_MEMBERS: u64 = 1 << 1;

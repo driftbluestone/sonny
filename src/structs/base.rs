@@ -1,6 +1,12 @@
 use serde::{Deserialize, Serialize};
+use serde_repr::{Deserialize_repr, Serialize_repr};
+use time::OffsetDateTime;
 
 const DISCORD_EPOCH: u64 = 1420070400000;
+
+// note to self: make "flags" some sort of enum probably
+// or hashmap of string: bool ?
+// google "bit field serialization"
 
 /* Snowflake */
 /// Reference:  https://docs.discord.com/developers/reference#snowflakes
@@ -49,18 +55,143 @@ impl Snowflake {
     }
 }
 
-#[allow(unused)]
-pub mod tests {
-    pub fn snowflake() {
-        use crate::structs::base::Snowflake;
-        use serde_json::to_string;
+/* User */
+/// Reference: https://docs.discord.com/developers/resources/user
+#[derive(Serialize, Deserialize)]
+struct UserBase {
+    id: Snowflake,
+    username: String,
+    global_name: Option<String>,
+    avatar: Option<String>,
+    bot: bool,
+    system: bool,
+    mfa_enabled: bool,
+    banner: Option<String>,
+    accent_color: Option<u32>,
+    locale: String,
+    verified: bool,
+    email: Option<String>,
+    flags: u32, // https://docs.discord.com/developers/resources/user#user-object-user-flags
+    premium_type: PremiumType, // https://docs.discord.com/developers/resources/user#user-object-premium-types
+    public_flags: u32, // see flags
+    avatar_decoration_data: AvatarDecorationData,
+    collectibles: Collectible, 
+    primary_guild: UserPrimaryGuild,
+}
 
-        let s: Snowflake = Snowflake::from(1234123412341);
-        let st = to_string(&s);
-        println!("{:?}", st);
-        let st = st.unwrap();
-        println!("{:?}", st);
-        let st: String = s.into();
-        println!("{}", st);
-    }
+/* Member */
+/// Reference: https://docs.discord.com/developers/resources/guild#guild-member-object
+/// 
+/// I think it can only be acquirred in this form from GET /guilds/{guild_id}/members/{member_id}
+#[derive(Serialize, Deserialize)]
+struct MemberBase {
+    user: Option<UserBase>, // wont be included in member object in message create/update events
+    nick: Option<String>,
+    avatar: Option<String>,
+    banner: Option<String>,
+    roles: Vec<Snowflake>,
+    #[serde(with = "time::serde::iso8601::option")]
+    joined_at: Option<OffsetDateTime>,
+    #[serde(with = "time::serde::iso8601::option")]
+    premium_since: Option<OffsetDateTime>,
+    deaf: bool,
+    mute: bool,
+    flags: u32,
+    pending: bool,
+    permissions: String,
+    #[serde(with = "time::serde::iso8601::option")]
+    communication_disabled_until: Option<OffsetDateTime>,
+    avatar_decoration_data: AvatarDecorationData,
+    collectibles: Collectible,
+}
+
+/// Reference: https://docs.discord.com/developers/resources/guild
+#[derive(Serialize, Deserialize)]
+struct GuildBase {
+    id: Snowflake,
+    name: String,
+    icon: Option<String>,
+    icon_hash: Option<String>,
+    splash: Option<String>,
+    discovery_splash: Option<String>,
+    owner: bool,
+    owner_id: Snowflake,
+    permissions: String,
+    afk_channel_id: Option<Snowflake>,
+    afk_timeout: u64,
+    widget_enabled: bool,
+    widget_channel_id: Option<Snowflake>,
+
+    // https://docs.discord.com/developers/resources/guild#guild-object-default-message-notification-level
+    default_message_notifications: u8,
+    explicit_content_filter: u8,
+    mfa_level: u8,
+    verification_level: u8,
+    nsfw_level: u8,
+    premium_tier: u8,
+
+    roles: Vec<()>, // TBI: https://docs.discord.com/developers/topics/permissions#role-object
+    emojis: Vec<()>, // TBI: https://docs.discord.com/developers/resources/emoji#emoji-object
+    features: Vec<String>, // TBI (technically): https://docs.discord.com/developers/resources/guild#guild-object-guild-features
+    application_id: Option<Snowflake>,
+    system_channel_id: Option<Snowflake>,
+    system_channel_flags: u32, // https://docs.discord.com/developers/resources/guild#guild-object-system-channel-flags
+    rules_channel_id: Option<Snowflake>,
+    max_presences: Option<u64>,
+    max_members: u64,
+    vanity_url_code: Option<String>,
+    description: Option<String>,
+    banner: Option<String>,
+    premium_subscription_count: u64, // number of boosts in the server
+    preferred_locale: String,
+    public_updates_channel_id: Option<Snowflake>,
+    max_video_channel_users: u64,
+    max_stage_video_channel_users: u64,
+    approximate_member_count: u64,
+    appriximate_presence_count: u64,
+    welcome_screen: (), // TBI: https://docs.discord.com/developers/resources/guild#welcome-screen-object
+    stickers: Vec<()>, // TBI: https://docs.discord.com/developers/resources/sticker#sticker-object
+    premium_progress_bar_enabled: bool,
+    safety_alerts_channel_id: Option<Snowflake>,
+    incidents_data: Option<()>, // TBI: https://docs.discord.com/developers/resources/guild#incidents-data-object
+}
+
+#[derive(Deserialize_repr, Serialize_repr)]
+#[repr(u8)]
+enum PremiumType {
+    None = 0,
+    NitroClassic = 1,
+    Nitro = 2,
+    NitroBasic = 3
+}
+
+/// Reference: https://docs.discord.com/developers/resources/user#user-object-user-primary-guild
+#[derive(Serialize, Deserialize)]
+struct UserPrimaryGuild {
+    identity_guild_id: Option<Snowflake>,
+    identity_enabled: Option<bool>,
+    tag: Option<String>,
+    badge: Option<String>,
+}
+
+/// Reference: https://docs.discord.com/developers/resources/user#avatar-decoration-data-object
+#[derive(Serialize, Deserialize)]
+struct AvatarDecorationData {
+    asset: String,
+    sku_id: Snowflake,
+}
+
+/// Reference: https://docs.discord.com/developers/resources/user#collectibles
+#[derive(Serialize, Deserialize)]
+struct Collectible {
+    nameplate: Nameplate,
+}
+
+/// Reference: https://docs.discord.com/developers/resources/user#nameplate
+#[derive(Serialize, Deserialize)]
+struct Nameplate {
+    sku_id: Snowflake,
+    asset: String,
+    label: String,
+    palette: String,
 }
