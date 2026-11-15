@@ -15,7 +15,9 @@ pub struct Bot {
     pub(in crate::ws) ws: Arc<Mutex<Option<WebSocketWriter>>>,
     pub(in crate::ws) intents: u64,
     pub(in crate::ws) token: String,
-    http_client: reqwest::Client,
+    pub http_client: Arc<reqwest::Client>,
+
+    pub(in crate::ws) auth: String,
 }
 
 // should be moved elsewhere, but where
@@ -33,7 +35,9 @@ impl Bot {
             token: token.to_string(),
             intents: intents,
             ws: Arc::new(Mutex::new(None)),
-            http_client: reqwest::Client::new(),
+            http_client: Arc::new(reqwest::Client::new()),
+
+            auth: format!("Bot {}", token),
         }
     }
 
@@ -46,13 +50,14 @@ impl Bot {
     }
 
     pub async fn start_blocking(&self) -> Result<(), Box<dyn Error + Send + Sync>> {
-        let token = &self.token.clone();
 
         let response:reqwest::Response = self.http_client
         .get(api!("/gateway/bot"))
-        .header(AUTHORIZATION, format!("Bot {}", token))
+        .header(AUTHORIZATION, &self.auth)
         .header(USER_AGENT, "DiscordBot (https://github.com/driftbluestone/sonny, 1.0.0)")
         .send().await?;
+
+        
         
         println!("Status: {}", response.status());
         let body: String = response.text().await?.trim().to_string();
