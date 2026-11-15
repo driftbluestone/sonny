@@ -5,7 +5,7 @@ mod structs {
 mod ws {
     pub mod intents;
     pub mod bot;
-    pub mod structs;
+    mod structs;
     mod opcodes;
     mod http;
 }
