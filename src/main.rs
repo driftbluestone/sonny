@@ -28,6 +28,23 @@ use crate::ws::{bot::Bot, intents};
  * that seems... inefficient.
  */
 
+/**
+ * We'll also want rate limiting prevention, Discord limits bots to 50 REST requests/sec,
+ * and Cloudflare limits invalid requests to 10000 requests per 10 minutes. (40x's).
+ * Assuming we program this well, that shouldn't be an issue. Also, apparently, interaction
+ * responses/followups are excluded from the 50 req/sec limit.
+ * 
+ * We could start buffering events into an async queue if a counter exceeds a safety
+ * value. (i.e. every request adds 1 to a counter, but we subtract 1 every 25 ms, if it
+ * goes above ~40, start buffering)
+ * 
+ * https://docs.discord.com/developers/topics/rate-limits
+ * "Because rate limits depend on a variety of factors and are subject to change, rate
+ * limits should not be hard coded into your app. Instead, your app should parse response
+ * headers to prevent hitting the limit, and to respond accordingly in case you do."
+ * ...oh.
+ */
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let token: String = std::fs::read_to_string("./TOKEN.txt").unwrap();

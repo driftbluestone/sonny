@@ -4,6 +4,14 @@ use time::OffsetDateTime;
 
 const DISCORD_EPOCH: u64 = 1420070400000;
 
+/**
+ * These structs are near directly copied from the Discord developer docs.
+ * They should be in a form such that payloads from GET requests can be
+ * directly transformed into these structs. They are rather awkward to
+ * use, though. So at some point we will want to write a converter to more
+ * ergonomic structs, like Member objects in Discord.py.
+ */
+
 // note to self: make "flags" some sort of enum probably
 // or hashmap of string: bool ?
 // google "bit field serialization"
@@ -71,9 +79,9 @@ struct UserBase {
     locale: String,
     verified: bool,
     email: Option<String>,
-    flags: u32, // https://docs.discord.com/developers/resources/user#user-object-user-flags
-    premium_type: PremiumType, // https://docs.discord.com/developers/resources/user#user-object-premium-types
-    public_flags: u32, // see flags
+    flags: u32, // bitfield: https://docs.discord.com/developers/resources/user#user-object-user-flags
+    premium_type: PremiumType, // bitfield: https://docs.discord.com/developers/resources/user#user-object-premium-types
+    public_flags: u32, // bitfield
     avatar_decoration_data: AvatarDecorationData,
     collectibles: Collectible, 
     primary_guild: UserPrimaryGuild,
@@ -96,7 +104,7 @@ struct MemberBase {
     premium_since: Option<OffsetDateTime>,
     deaf: bool,
     mute: bool,
-    flags: u32,
+    flags: u32, // bitfield
     pending: bool,
     permissions: String,
     #[serde(with = "time::serde::iso8601::option")]
@@ -121,21 +129,18 @@ struct GuildBase {
     afk_timeout: u64,
     widget_enabled: bool,
     widget_channel_id: Option<Snowflake>,
-
-    // https://docs.discord.com/developers/resources/guild#guild-object-default-message-notification-level
-    default_message_notifications: u8,
-    explicit_content_filter: u8,
-    mfa_level: u8,
-    verification_level: u8,
-    nsfw_level: u8,
-    premium_tier: u8,
-
-    roles: Vec<()>, // TBI: https://docs.discord.com/developers/topics/permissions#role-object
-    emojis: Vec<()>, // TBI: https://docs.discord.com/developers/resources/emoji#emoji-object
+    default_message_notifications: DefaultMessageNotifications,
+    explicit_content_filter: ExplicitContentFilterLevel,
+    mfa_level: MFALevel,
+    verification_level: VerificationLevel,
+    nsfw_level: GuildAgeRestrictionLevel,
+    premium_tier: PremiumTier,
+    roles: Vec<RoleBase>,
+    emojis: Vec<EmojiBase>,
     features: Vec<String>, // TBI (technically): https://docs.discord.com/developers/resources/guild#guild-object-guild-features
     application_id: Option<Snowflake>,
     system_channel_id: Option<Snowflake>,
-    system_channel_flags: u32, // https://docs.discord.com/developers/resources/guild#guild-object-system-channel-flags
+    system_channel_flags: u32, // bitfield https://docs.discord.com/developers/resources/guild#guild-object-system-channel-flags
     rules_channel_id: Option<Snowflake>,
     max_presences: Option<u64>,
     max_members: u64,
@@ -154,6 +159,86 @@ struct GuildBase {
     premium_progress_bar_enabled: bool,
     safety_alerts_channel_id: Option<Snowflake>,
     incidents_data: Option<()>, // TBI: https://docs.discord.com/developers/resources/guild#incidents-data-object
+}
+
+/// Reference: https://docs.discord.com/developers/topics/permissions#role-object
+#[derive(Serialize, Deserialize)]
+struct RoleBase {
+    id: Snowflake,
+    name: String,
+    colors: (), // TBI: https://docs.discord.com/developers/topics/permissions#role-object-role-colors-object
+    hoist: bool,
+    icon: Option<String>,
+    unicode_emoji: Option<String>,
+    position: u64,
+    permissions: String, // apparently it's a "permission bit set", look into that later
+    managed: bool,
+    mentionable: bool,
+    tags: (), // TBI: https://docs.discord.com/developers/topics/permissions#role-object-role-tags-structure
+    flags: u64 // bitfield https://docs.discord.com/developers/topics/permissions#role-object-role-flags
+}
+
+/// Reference: https://docs.discord.com/developers/resources/emoji#emoji-object
+#[derive(Serialize, Deserialize)]
+struct EmojiBase {
+    id: Option<Snowflake>,
+    name: Option<String>,
+    roles: Vec<Snowflake>, // roles allowed to use thsi emoji
+    user: UserBase, // user that created this emoji
+    require_colons: bool,
+    managed: bool,
+    animated: bool,
+    available: bool,
+}
+
+#[derive(Deserialize_repr, Serialize_repr)]
+#[repr(u8)]
+enum DefaultMessageNotifications {
+    AllMessages = 0,
+    OnlyMentions = 1,
+}
+
+#[derive(Deserialize_repr, Serialize_repr)]
+#[repr(u8)]
+enum ExplicitContentFilterLevel {
+    Disabled = 0,
+    MembersWithoutRoles = 1,
+    AllMembers = 2,
+}
+
+#[derive(Deserialize_repr, Serialize_repr)]
+#[repr(u8)]
+enum MFALevel {
+    None = 0,
+    Elevated = 1,
+}
+
+#[derive(Deserialize_repr, Serialize_repr)]
+#[repr(u8)]
+enum VerificationLevel {
+    None = 0,
+    Low = 1,
+    Medium = 2,
+    High = 3,
+    VeryHigh = 4,
+}
+
+#[derive(Deserialize_repr, Serialize_repr)]
+#[repr(u8)]
+enum GuildAgeRestrictionLevel {
+    Default = 0,
+    Explicit = 1,
+    Safe = 2,
+    AgeRestricted = 3,
+}
+
+#[derive(Deserialize_repr, Serialize_repr)]
+#[repr(u8)]
+enum PremiumTier {
+    None = 0,
+    Tier1 = 1,
+    Tier2 = 2,
+    Tier3 = 3, 
 }
 
 #[derive(Deserialize_repr, Serialize_repr)]
