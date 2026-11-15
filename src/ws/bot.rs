@@ -4,50 +4,21 @@ use reqwest::header::{AUTHORIZATION, USER_AGENT};
 use tokio::{net::TcpStream, sync::RwLock, task::JoinHandle, time::{self, Duration}};
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, tungstenite::Message::{self, Text}};
 
+use crate::ws::{structs::*, opcodes::Opcode};
+
 type WebSocketWriter = futures_util::stream::SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, tokio_tungstenite::tungstenite::Message>;
-
-#[derive(serde::Deserialize, serde::Serialize)]
-struct GatewayResponse {
-    url: String,
-    session_start_limit: SSL,
-    shards: i64,
-}
-#[derive(serde::Deserialize, serde::Serialize)]
-struct SSL {
-    max_concurrency: i64,
-    remaining: i64,
-    reset_after: i64,
-    total: i64
-}
-
-#[derive(serde::Serialize)]
-struct IdentifyData {
-    token: String,
-    intents: u64,
-    properties: IdentifyProperties,
-}
-
-#[derive(serde::Serialize)]
-struct IdentifyProperties {
-    os: String,
-    browser: String,
-    device: String,
-}
-
-#[derive(serde::Serialize)]
-struct GatewayPayload<T> {
-    op: u8,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    d: Option<T>,
-}
+pub type SequenceNum = Arc<AtomicU64>;
 
 #[derive(Clone)]
 pub struct Bot {
-    s: Arc<AtomicU64>,
-    ws: Arc<RwLock<Option<WebSocketWriter>>>,
-    intents: u64,
-    token: String
+    pub(in crate::ws) s: SequenceNum,
+    pub(in crate::ws) ws: Arc<RwLock<Option<WebSocketWriter>>>,
+    pub(in crate::ws) intents: u64,
+    pub(in crate::ws) token: String
 }
+
+// should be moved elsewhere, but where
+// "elsewhere" is i havent a clue
 macro_rules! api {
     ($e:expr) => {
         concat!("https://discord.com/api/v10", $e)
@@ -95,54 +66,26 @@ impl Bot {
             if let tokio_tungstenite::tungstenite::Message::Text(text) = msg? {
                 let json: serde_json::Value = serde_json::from_str(&text)?;
                 let op = json["op"].as_u64().unwrap_or(99);
-
-                // Opcode 10: Hello
-                if op == 10 {
-                    let interval = json["d"]["heartbeat_interval"].as_u64().unwrap_or(41351);
-                    println!("Received Hello. Heartbeat interval: {}ms", interval);
-
-                    // Send Identify (Opcode 2)
-                    let identify: GatewayPayload<IdentifyData> = GatewayPayload {
-                        op: 2,
-                        d: Some(IdentifyData {
-                            token: token.clone(),
-                            intents: self.intents,
-                            properties: IdentifyProperties {
-                                os: "linux".to_string(),
-                                browser: "temp".to_string(),
-                                device: "temp".to_string(),
-                            },
-                        }),
-                    };
-
-                    let payload_str = serde_json::to_string(&identify)?;
-                    self.send(tokio_tungstenite::tungstenite::Message::Text(payload_str.into())).await;
-                    println!("did the identify");
-
-                    let bot = self.clone();
-                    tokio::spawn(async move {
-                        bot.hb_loop(interval).await;
-                    });
-
-                    // Note: In a production bot, spawn a background task here to send
-                    // Opcode 1 (Heartbeat) every `interval` milliseconds with the last sequence number.
+                self.op(op, json).await;
+                /* decent impl example to save for later
+                if event_name == "MESSAGE_CREATE" {
+                    let content = json["d"]["content"].as_str().unwrap_or("");
+                    let author = json["d"]["author"]["username"].as_str().unwrap_or("");
+                    println!("Message from {}: {}", author, content);
                 }
-
-                // Opcode 0: Dispatch Event
-                if op == 0 {
-                    let event_name = json["t"].as_str().unwrap_or("UNKNOWN");
-                    self.update_s(json["s"].as_u64().unwrap_or(0)).await;
-                    println!("Dispatch event: {}", event_name);
-
-                    if event_name == "MESSAGE_CREATE" {
-                        let content = json["d"]["content"].as_str().unwrap_or("");
-                        let author = json["d"]["author"]["username"].as_str().unwrap_or("");
-                        println!("Message from {}: {}", author, content);
-                    }
-                }
+                */
+                
             }
         }
         Ok(())
+    }
+
+    pub(in crate::ws) async fn dispatch(&self, json: serde_json::Value) {
+        let event_name = json["t"].as_str().unwrap_or("UNKNOWN");
+        self.update_s(json["s"].as_u64().unwrap_or(0)).await;
+        let payload = json["d"].to_owned();
+        println!("Dispatch event: {}", event_name);
+        println!("Payload: {}", payload);
     }
 
     pub async fn get_s(&self) -> Option<u64> {
@@ -158,7 +101,7 @@ impl Bot {
     }
 
     // heartbeat: opcode 1
-    async fn hb_loop(&self, interval_ms: u64) {
+    pub(in crate::ws) async fn hb_loop(&self, interval_ms: u64) {
         let mut interval: time::Interval = time::interval(Duration::from_millis(interval_ms));
         
         loop {
@@ -167,7 +110,7 @@ impl Bot {
         }
     }
 
-    async fn send_hb(&self) {
+    pub(in crate::ws) async fn send_hb(&self) {
         let payload = match self.get_s().await {
             Some(seq) => {
                 let mut buf: String = String::with_capacity(34);
@@ -180,7 +123,7 @@ impl Bot {
         let _ = self.send(Text(payload)).await;
     }
 
-    async fn send(&self, msg: Message) {
+    pub(in crate::ws) async fn send(&self, msg: Message) {
         let _ = self.ws.write().await.as_mut().unwrap().send(msg).await;
     }
 }
