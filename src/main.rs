@@ -1,5 +1,5 @@
 mod structs {
-    mod base;
+    pub mod base;
     mod user;
 }
 mod ws {
@@ -8,6 +8,10 @@ mod ws {
     mod structs;
     mod opcodes;
     mod http;
+}
+mod gateway_events {
+    mod application_commands;
+    mod messages;
 }
 
 use std::error::Error;
