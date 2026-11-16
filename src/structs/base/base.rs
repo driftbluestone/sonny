@@ -1,4 +1,4 @@
-use crate::structs::base::{snowflake::*, emotes::*, roles::*};
+use crate::structs::base::{channels::*, emotes::*, roles::*, snowflake::*};
 
 /**
  * These structs are near directly copied from the Discord developer docs.
@@ -25,7 +25,6 @@ use crate::structs::base::{snowflake::*, emotes::*, roles::*};
 // or hashmap of string: bool ?
 // google "bit field serialization"
 
-/* User */
 /// Reference: https://docs.discord.com/developers/resources/user
 #[derive(Serialize, Deserialize)]
 pub struct UserBase {
@@ -49,7 +48,6 @@ pub struct UserBase {
     primary_guild: Option<UserPrimaryGuild>,
 }
 
-/* Member */
 /// Reference: https://docs.discord.com/developers/resources/guild#guild-member-object
 /// 
 /// I think it can only be acquirred in this form from GET /guilds/{guild_id}/members/{member_id}
@@ -134,7 +132,7 @@ pub struct MessageBase {
     timestamp: OffsetDateTime,
     #[serde(with = "time::serde::iso8601::option")]
     edited_timestamp: Nullable<OffsetDateTime>,
-    tts: bool,
+    tts: bool, // is text to speech
     mention_everyone: bool,
     mentions: Vec<UserBase>,
     mention_roles: Option<Vec<Snowflake>>,
@@ -154,7 +152,7 @@ pub struct MessageBase {
     // referenced_message: NullableOption<MessageBase>, // this will have to be Dealt With
     interaction_metadata: Option<()>, // TBI: https://docs.discord.com/developers/resources/message#message-interaction-metadata-object
     interaction: Option<()>, // TBI: https://docs.discord.com/developers/interactions/receiving-and-responding#message-interaction-object-message-interaction-structure
-    thread: Option<()>, // TBI: https://docs.discord.com/developers/resources/channel#channel-object
+    thread: Option<Channel>, // TBI: https://docs.discord.com/developers/resources/channel#channel-object
     components: Option<Vec<()>>, // TBI: https://docs.discord.com/developers/components/reference#component-object
     sticker_items: Option<Vec<StickerItem>>,
     stickers: Option<Vec<Sticker>>,
@@ -166,6 +164,20 @@ pub struct MessageBase {
     shared_client_theme: Option<()>, // TBI: https://docs.discord.com/developers/resources/message#shared-client-theme-object
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct Overwrite {
+    id: Snowflake,
+    r#type: OverwriteType,
+    allow: String, // actually permission bit set
+    deny: String, // also permission bit set
+}
+
+#[derive(Deserialize_repr, Serialize_repr)]
+#[repr(u8)]
+enum OverwriteType {
+    Role,
+    Member,
+}
 
 
 #[derive(Deserialize_repr, Serialize_repr)]

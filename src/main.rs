@@ -4,7 +4,7 @@ mod structs {
         mod base;
         mod emotes;
         mod roles;
-        
+        mod channels;
     }
     mod user;
 }

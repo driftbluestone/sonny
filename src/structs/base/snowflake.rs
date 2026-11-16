@@ -9,7 +9,6 @@ pub const DISCORD_EPOCH: u64 = 1420070400000;
 pub type Nullable<T> = Option<T>;
 pub type NullableOption<T> = Option<T>;
 
-/* Snowflake */
 /// Reference:  https://docs.discord.com/developers/reference#snowflakes
 /// 
 /// Implements to/from String and u64.
