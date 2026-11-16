@@ -1,10 +1,4 @@
-use serde::{Deserialize, Serialize};
-use serde_repr::{Deserialize_repr, Serialize_repr};
-use time::OffsetDateTime;
-
-const DISCORD_EPOCH: u64 = 1420070400000;
-type Nullable<T> = Option<T>;
-type NullableOption<T> = Option<T>;
+use crate::structs::base::{snowflake::*, emotes::*, roles::*};
 
 /**
  * These structs are near directly copied from the Discord developer docs.
@@ -31,57 +25,10 @@ type NullableOption<T> = Option<T>;
 // or hashmap of string: bool ?
 // google "bit field serialization"
 
-/* Snowflake */
-/// Reference:  https://docs.discord.com/developers/reference#snowflakes
-/// 
-/// Implements to/from String and u64.
-/// Can also be converted to timestamps.
-#[derive(Serialize, Deserialize)]
-pub struct Snowflake(String);
-
-impl TryFrom<String> for Snowflake {
-    type Error = std::num::ParseIntError;
-
-    fn try_from(s: String) -> Result<Self, Self::Error> {
-        s.parse::<u64>()?;
-        Ok(Snowflake ( s ))
-    }
-}
-
-impl From<u64> for Snowflake {
-    fn from(i: u64) -> Self {
-        Snowflake(i.to_string())
-    }
-}
-
-impl From<Snowflake> for String {
-    fn from(s: Snowflake) -> Self {
-        s.0
-    }
-}
-
-impl From<Snowflake> for u64 {
-    fn from(s: Snowflake) -> Self {
-        s.0.parse().unwrap()
-    }
-}
-
-#[allow(unused)]
-impl Snowflake {
-    fn to_timestamp_ms(self) -> u64 {
-        let n: u64 = self.into();
-        (n >> 22) + DISCORD_EPOCH
-    }
-
-    fn to_timestamp_s(self) -> u64 {
-        self.to_timestamp_ms() / 1000
-    }
-}
-
 /* User */
 /// Reference: https://docs.discord.com/developers/resources/user
 #[derive(Serialize, Deserialize)]
-struct UserBase {
+pub struct UserBase {
     id: Snowflake,
     username: String,
     global_name: Nullable<String>,
@@ -107,7 +54,7 @@ struct UserBase {
 /// 
 /// I think it can only be acquirred in this form from GET /guilds/{guild_id}/members/{member_id}
 #[derive(Serialize, Deserialize)]
-struct MemberBase {
+pub struct MemberBase {
     user: Option<UserBase>, // wont be included in member object in message create/update events
     nick: NullableOption<String>,
     avatar: NullableOption<String>,
@@ -130,7 +77,7 @@ struct MemberBase {
 
 /// Reference: https://docs.discord.com/developers/resources/guild
 #[derive(Serialize, Deserialize)]
-struct GuildBase {
+pub struct GuildBase {
     id: Snowflake,
     name: String,
     icon: Nullable<String>,
@@ -169,8 +116,8 @@ struct GuildBase {
     max_stage_video_channel_users: Option<u64>,
     approximate_member_count: Option<u64>,
     appriximate_presence_count: Option<u64>,
-    welcome_screen: Option<()>, // TBI: https://docs.discord.com/developers/resources/guild#welcome-screen-object
-    stickers: Option<Vec<()>>, // TBI: https://docs.discord.com/developers/resources/sticker#sticker-object
+    welcome_screen: Option<WelcomeScreen>,
+    stickers: Option<Vec<Sticker>>,
     premium_progress_bar_enabled: bool,
     safety_alerts_channel_id: Nullable<Snowflake>,
     incidents_data: Nullable<()>, // TBI: https://docs.discord.com/developers/resources/guild#incidents-data-object
@@ -178,7 +125,7 @@ struct GuildBase {
 
 /// Reference: https://docs.discord.com/developers/resources/message#message-object
 #[derive(Serialize, Deserialize)]
-struct MessageBase {
+pub struct MessageBase {
     id: Snowflake,
     channel_id: Snowflake,
     author: UserBase,
@@ -209,8 +156,8 @@ struct MessageBase {
     interaction: Option<()>, // TBI: https://docs.discord.com/developers/interactions/receiving-and-responding#message-interaction-object-message-interaction-structure
     thread: Option<()>, // TBI: https://docs.discord.com/developers/resources/channel#channel-object
     components: Option<Vec<()>>, // TBI: https://docs.discord.com/developers/components/reference#component-object
-    sticker_items: Option<Vec<()>>, // TBI: https://docs.discord.com/developers/resources/sticker#sticker-item-object
-    stickers: Option<Vec<()>>, // TBI: https://docs.discord.com/developers/resources/sticker#sticker-object
+    sticker_items: Option<Vec<StickerItem>>,
+    stickers: Option<Vec<Sticker>>,
     position: Option<i64>,
     role_subscription_data: Option<()>, // TBI: https://docs.discord.com/developers/resources/message#role-subscription-data-object
     resolved: Option<()>, // TBI: https://docs.discord.com/developers/interactions/receiving-and-responding#interaction-object-resolved-data-structure
@@ -219,35 +166,7 @@ struct MessageBase {
     shared_client_theme: Option<()>, // TBI: https://docs.discord.com/developers/resources/message#shared-client-theme-object
 }
 
-/// Reference: https://docs.discord.com/developers/topics/permissions#role-object
-#[derive(Serialize, Deserialize)]
-struct RoleBase {
-    id: Snowflake,
-    name: String,
-    colors: (), // TBI: https://docs.discord.com/developers/topics/permissions#role-object-role-colors-object
-    hoist: bool,
-    icon: NullableOption<String>,
-    unicode_emoji: NullableOption<String>,
-    position: u64,
-    permissions: String, // apparently it's a "permission bit set", look into that later
-    managed: bool,
-    mentionable: bool,
-    tags: Option<()>, // TBI: https://docs.discord.com/developers/topics/permissions#role-object-role-tags-structure
-    flags: u64 // bitfield https://docs.discord.com/developers/topics/permissions#role-object-role-flags
-}
 
-/// Reference: https://docs.discord.com/developers/resources/emoji#emoji-object
-#[derive(Serialize, Deserialize)]
-struct EmojiBase {
-    id: Nullable<Snowflake>,
-    name: Nullable<String>,
-    roles: Option<Vec<Snowflake>>, // roles allowed to use thsi emoji
-    user: Option<UserBase>, // user that created this emoji
-    require_colons: Option<bool>,
-    managed: Option<bool>,
-    animated: Option<bool>,
-    available: Option<bool>,
-}
 
 #[derive(Deserialize_repr, Serialize_repr)]
 #[repr(u8)]
@@ -337,4 +256,20 @@ struct Nameplate {
     asset: String,
     label: String,
     palette: String,
+}
+
+/// Reference: https://docs.discord.com/developers/resources/guild#welcome-screen-object
+#[derive(Serialize, Deserialize)]
+struct WelcomeScreen {
+    description: Nullable<String>,
+    welcome_channels: Vec<WelcomeScreenChannel>,
+}
+
+/// Reference: https://docs.discord.com/developers/resources/guild#welcome-screen-object-welcome-screen-channel-structure
+#[derive(Serialize, Deserialize)]
+struct WelcomeScreenChannel {
+    channel_id: Snowflake,
+    description: String,
+    emoji_id: Nullable<Snowflake>,
+    emoji_name: Nullable<String>,
 }

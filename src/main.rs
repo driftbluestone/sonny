@@ -1,5 +1,11 @@
 mod structs {
-    pub mod base;
+    pub mod base {
+        pub mod snowflake;
+        mod base;
+        mod emotes;
+        mod roles;
+        
+    }
     mod user;
 }
 mod ws {
