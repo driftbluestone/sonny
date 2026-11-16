@@ -252,60 +252,60 @@ struct EmojiBase {
 #[derive(Deserialize_repr, Serialize_repr)]
 #[repr(u8)]
 enum DefaultMessageNotifications {
-    AllMessages = 0,
-    OnlyMentions = 1,
+    AllMessages,
+    OnlyMentions,
 }
 
 #[derive(Deserialize_repr, Serialize_repr)]
 #[repr(u8)]
 enum ExplicitContentFilterLevel {
-    Disabled = 0,
-    MembersWithoutRoles = 1,
-    AllMembers = 2,
+    Disabled,
+    MembersWithoutRoles,
+    AllMembers,
 }
 
 #[derive(Deserialize_repr, Serialize_repr)]
 #[repr(u8)]
 enum MFALevel {
-    None = 0,
-    Elevated = 1,
+    None,
+    Elevated,
 }
 
 #[derive(Deserialize_repr, Serialize_repr)]
 #[repr(u8)]
 enum VerificationLevel {
-    None = 0,
-    Low = 1,
-    Medium = 2,
-    High = 3,
-    VeryHigh = 4,
+    None,
+    Low,
+    Medium,
+    High,
+    VeryHigh,
 }
 
 #[derive(Deserialize_repr, Serialize_repr)]
 #[repr(u8)]
 enum GuildAgeRestrictionLevel {
-    Default = 0,
-    Explicit = 1,
-    Safe = 2,
-    AgeRestricted = 3,
+    Default,
+    Explicit,
+    Safe,
+    AgeRestricted,
 }
 
 #[derive(Deserialize_repr, Serialize_repr)]
 #[repr(u8)]
 enum PremiumTier {
-    None = 0,
-    Tier1 = 1,
-    Tier2 = 2,
-    Tier3 = 3, 
+    None,
+    Tier1,
+    Tier2,
+    Tier3, 
 }
 
 #[derive(Deserialize_repr, Serialize_repr)]
 #[repr(u8)]
 enum PremiumType {
-    None = 0,
-    NitroClassic = 1,
-    Nitro = 2,
-    NitroBasic = 3
+    None,
+    NitroClassic,
+    Nitro,
+    NitroBasic
 }
 
 /// Reference: https://docs.discord.com/developers/resources/user#user-object-user-primary-guild
