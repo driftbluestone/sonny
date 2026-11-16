@@ -6,6 +6,10 @@ mod structs {
         mod roles;
         mod channels;
         mod flags;
+        mod message;
+        mod attachment;
+        mod embed;
+        mod application;
     }
     mod user;
 }

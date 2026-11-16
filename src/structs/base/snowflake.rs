@@ -13,7 +13,7 @@ pub type NullableOption<T> = Option<T>;
 /// 
 /// Implements to/from String and u64.
 /// Can also be converted to timestamps.
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct Snowflake(String);
 
 impl TryFrom<String> for Snowflake {
