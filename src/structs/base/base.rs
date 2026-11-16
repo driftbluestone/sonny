@@ -118,8 +118,21 @@ pub struct GuildBase {
     stickers: Option<Vec<Sticker>>,
     premium_progress_bar_enabled: bool,
     safety_alerts_channel_id: Nullable<Snowflake>,
-    incidents_data: Nullable<()>, // TBI: https://docs.discord.com/developers/resources/guild#incidents-data-object
+    incidents_data: Nullable<IncidentsData>,
 }
+
+/// Reference: https://docs.discord.com/developers/resources/guild#incidents-data-object
+#[derive(Serialize, Deserialize)]
+pub struct IncidentsData {
+    #[serde(with = "time::serde::iso8601::option")]
+    invites_disabled_until: Nullable<OffsetDateTime>,
+    #[serde(with = "time::serde::iso8601::option")]
+    dms_disabled_until: Nullable<OffsetDateTime>,
+    #[serde(with = "time::serde::iso8601::option")]
+    dm_spam_detected_at: NullableOption<OffsetDateTime>,
+    #[serde(with = "time::serde::iso8601::option")]
+    raid_detected_at: NullableOption<OffsetDateTime>,
+} 
 
 /// Reference: https://docs.discord.com/developers/resources/message#message-object
 #[derive(Serialize, Deserialize)]

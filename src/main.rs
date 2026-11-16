@@ -5,6 +5,7 @@ mod structs {
         mod emotes;
         mod roles;
         mod channels;
+        mod flags;
     }
     mod user;
 }
