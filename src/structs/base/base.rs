@@ -97,7 +97,7 @@ pub struct GuildBase {
     premium_tier: PremiumTier,
     roles: Vec<RoleBase>,
     emojis: Vec<EmojiBase>,
-    features: Vec<String>, // TBI (technically): https://docs.discord.com/developers/resources/guild#guild-object-guild-features
+    features: Vec<GuildFeature>,
     application_id: Nullable<Snowflake>,
     system_channel_id: Nullable<Snowflake>,
     system_channel_flags: u32, // bitfield https://docs.discord.com/developers/resources/guild#guild-object-system-channel-flags
@@ -132,49 +132,45 @@ pub struct IncidentsData {
     dm_spam_detected_at: NullableOption<OffsetDateTime>,
     #[serde(with = "time::serde::iso8601::option")]
     raid_detected_at: NullableOption<OffsetDateTime>,
-} 
+}
 
-/// Reference: https://docs.discord.com/developers/resources/message#message-object
-#[derive(Serialize, Deserialize)]
-pub struct MessageBase {
-    id: Snowflake,
-    channel_id: Snowflake,
-    author: UserBase,
-    content: String,
-    #[serde(with = "time::serde::iso8601")]
-    timestamp: OffsetDateTime,
-    #[serde(with = "time::serde::iso8601::option")]
-    edited_timestamp: Nullable<OffsetDateTime>,
-    tts: bool, // is text to speech
-    mention_everyone: bool,
-    mentions: Vec<UserBase>,
-    mention_roles: Option<Vec<Snowflake>>,
-    mention_channels: Option<Vec<()>>, // TBI: https://docs.discord.com/developers/resources/message#channel-mention-object
-    attatchments: Vec<()>, // TBI: https://docs.discord.com/developers/resources/message#attachment-object
-    embeds: Vec<()>, // TBI: https://docs.discord.com/developers/resources/message#embed-object
-    reactions: Option<Vec<()>>, // TBI: https://docs.discord.com/developers/resources/message#reaction-object
-    pinned: bool,
-    webhook_id: Option<Snowflake>,
-    r#type: u8, // TBI enum: https://docs.discord.com/developers/resources/message#message-object-message-types
-    activity: (), // TBI: https://docs.discord.com/developers/resources/message#message-object-message-activity-structure
-    application: (), // (partial) TBI: https://docs.discord.com/developers/resources/application#application-object
-    application_id: Snowflake,
-    flags: u64, // bitfield https://docs.discord.com/developers/resources/message#message-object-message-flags
-    message_reference: Option<()>, // TBI: https://docs.discord.com/developers/resources/message#message-reference-structure
-    message_snapshots: Option<Vec<()>>, // TBI: https://docs.discord.com/developers/resources/message#message-snapshot-object
-    // referenced_message: NullableOption<MessageBase>, // this will have to be Dealt With
-    interaction_metadata: Option<()>, // TBI: https://docs.discord.com/developers/resources/message#message-interaction-metadata-object
-    interaction: Option<()>, // TBI: https://docs.discord.com/developers/interactions/receiving-and-responding#message-interaction-object-message-interaction-structure
-    thread: Option<Channel>, // TBI: https://docs.discord.com/developers/resources/channel#channel-object
-    components: Option<Vec<()>>, // TBI: https://docs.discord.com/developers/components/reference#component-object
-    sticker_items: Option<Vec<StickerItem>>,
-    stickers: Option<Vec<Sticker>>,
-    position: Option<i64>,
-    role_subscription_data: Option<()>, // TBI: https://docs.discord.com/developers/resources/message#role-subscription-data-object
-    resolved: Option<()>, // TBI: https://docs.discord.com/developers/interactions/receiving-and-responding#interaction-object-resolved-data-structure
-    poll: Option<()>, // TBI: https://docs.discord.com/developers/resources/poll#poll-object
-    call: Option<()>, // TBI: https://docs.discord.com/developers/resources/message#message-call-object
-    shared_client_theme: Option<()>, // TBI: https://docs.discord.com/developers/resources/message#shared-client-theme-object
+/// Reference: https://docs.discord.com/developers/resources/guild#guild-object-guild-features
+#[derive(Deserialize_repr, Serialize_repr)]
+#[repr(u8)]
+enum GuildFeature {
+    AnimatedBanner,
+    AnimatedIcon,
+    ApplicationCommandPermissionsV2,
+    AutoModeration,
+    Banner,
+    Community,
+    CreatorMonetizableProvisional,
+    CreatorStorePage,
+    DeveloperSupportServer,
+    Discoverable,
+    EnhancedRoleColors,
+    Featurable,
+    GuildTags,
+    GuestsEnabled,
+    InvitesDisabled,
+    InviteSplash,
+    MemberVerificationGateEnabled,
+    MoreSoundboard,
+    MoreStickers,
+    News,
+    Partnered,
+    PreviewEnabled,
+    PruneRequiresAdmin,
+    RaidAlertsDisabled,
+    RoleIcons,
+    RoleSubscriptionsAvailableForPurchase,
+    RoleSubscriptionsEnabled,
+    Soundboard,
+    TicketedEventsEnabled,
+    VanityUrl,
+    Verified,
+    VipRegions,
+    WelcomeScreenEnabled
 }
 
 #[derive(Serialize, Deserialize)]

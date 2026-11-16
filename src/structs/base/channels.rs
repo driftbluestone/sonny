@@ -86,7 +86,7 @@ struct ThreadMember {
 /// Reference: https://docs.discord.com/developers/resources/channel#channel-object-channel-types
 #[derive(Deserialize_repr, Serialize_repr)]
 #[repr(u8)]
-enum ChannelType {
+pub enum ChannelType {
     GuildText,
     DM,
     GuildVoice,
