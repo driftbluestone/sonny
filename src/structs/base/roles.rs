@@ -1,3 +1,5 @@
+use serde::Deserializer;
+
 use crate::structs::base::snowflake::*;
 
 /// Reference: https://docs.discord.com/developers/topics/permissions#role-object
@@ -5,7 +7,7 @@ use crate::structs::base::snowflake::*;
 pub struct RoleBase {
     id: Snowflake,
     name: String,
-    colors: (), // TBI: https://docs.discord.com/developers/topics/permissions#role-object-role-colors-object
+    colors: Color,
     hoist: bool,
     icon: NullableOption<String>,
     unicode_emoji: NullableOption<String>,
@@ -13,6 +15,25 @@ pub struct RoleBase {
     permissions: String, // apparently it's a "permission bit set", look into that later
     managed: bool,
     mentionable: bool,
-    tags: Option<()>, // TBI: https://docs.discord.com/developers/topics/permissions#role-object-role-tags-structure
-    flags: u64 // bitfield https://docs.discord.com/developers/topics/permissions#role-object-role-flags
+    tags: Option<RoleTags>,
+    flags: u64, // bitfield https://docs.discord.com/developers/topics/permissions#role-object-role-flags
+}
+
+/// Reference: https://docs.discord.com/developers/topics/permissions#role-object-role-colors-object
+#[derive(Serialize, Deserialize)]
+struct Color {
+    primary_color: u32,
+    secondary_color: Option<u32>,
+    tertiary_color: Option<u32>,
+}
+
+/// Reference: https://docs.discord.com/developers/topics/permissions#role-object-role-colors-object
+#[derive(Serialize, Deserialize)]
+struct RoleTags {
+    bot_id: Option<Snowflake>,
+    integration_id: Option<Snowflake>,
+    premium_subscriber: Option<bool>, // TBI: null value means true, no key means false
+    subscription_listing_id: Option<Snowflake>,
+    available_for_purchase: Option<bool>,  // TBI: null value means true, no key means false
+    guild_connections: Option<bool>,  // TBI: null value means true, no key means false
 }

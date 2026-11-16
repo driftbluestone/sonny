@@ -97,7 +97,7 @@ pub struct GuildBase {
     premium_tier: PremiumTier,
     roles: Vec<RoleBase>,
     emojis: Vec<EmojiBase>,
-    features: Vec<String>, // TBI (technically): https://docs.discord.com/developers/resources/guild#guild-object-guild-features
+    features: Vec<GuildFeature>,
     application_id: Nullable<Snowflake>,
     system_channel_id: Nullable<Snowflake>,
     system_channel_flags: u32, // bitfield https://docs.discord.com/developers/resources/guild#guild-object-system-channel-flags
@@ -132,6 +132,45 @@ pub struct IncidentsData {
     dm_spam_detected_at: NullableOption<OffsetDateTime>,
     #[serde(with = "time::serde::iso8601::option")]
     raid_detected_at: NullableOption<OffsetDateTime>,
+}
+
+/// Reference: https://docs.discord.com/developers/resources/guild#guild-object-guild-features
+#[derive(Deserialize_repr, Serialize_repr)]
+#[repr(u8)]
+enum GuildFeature {
+    AnimatedBanner,
+    AnimatedIcon,
+    ApplicationCommandPermissionsV2,
+    AutoModeration,
+    Banner,
+    Community,
+    CreatorMonetizableProvisional,
+    CreatorStorePage,
+    DeveloperSupportServer,
+    Discoverable,
+    EnhancedRoleColors,
+    Featurable,
+    GuildTags,
+    GuestsEnabled,
+    InvitesDisabled,
+    InviteSplash,
+    MemberVerificationGateEnabled,
+    MoreSoundboard,
+    MoreStickers,
+    News,
+    Partnered,
+    PreviewEnabled,
+    PruneRequiresAdmin,
+    RaidAlertsDisabled,
+    RoleIcons,
+    RoleSubscriptionsAvailableForPurchase,
+    RoleSubscriptionsEnabled,
+    Soundboard,
+    TicketedEventsEnabled,
+    VanityUrl,
+    Verified,
+    VipRegions,
+    WelcomeScreenEnabled
 }
 
 #[derive(Serialize, Deserialize)]
