@@ -1,14 +1,7 @@
 use std::collections::HashMap;
 
 use crate::structs::base::{
-    application::{Application, IntegrationType},
-    attachment::Attachment,
-    base::{MemberBase, UserBase},
-    channels::*,
-    embed::Embed,
-    emotes::*,
-    roles::RoleBase,
-    snowflake::*,
+    application::{Application, IntegrationType}, attachment::Attachment, base::{MemberBase, UserBase}, channels::*, components::ComponentType, embed::Embed, emotes::*, roles::RoleBase, snowflake::*,
 };
 
 /// Reference: https://docs.discord.com/developers/resources/message#message-object
@@ -44,7 +37,7 @@ pub struct MessageBase {
     interaction_metadata: Option<InteractionMetadata>,
     interaction: Option<Interaction>,
     thread: Option<Channel>,
-    components: Option<Vec<()>>, // TBI: https://docs.discord.com/developers/components/reference#component-object
+    components: Option<Vec<ComponentType>>, // NOT FULLY IMPLEMENTED! TBI: https://docs.discord.com/developers/components/reference#component-object
     sticker_items: Option<Vec<StickerItem>>,
     stickers: Option<Vec<Sticker>>,
     position: Option<i64>,

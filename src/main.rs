@@ -10,6 +10,7 @@ mod structs {
         mod attachment;
         mod embed;
         mod application;
+        mod components;
     }
     mod user;
 }
