@@ -3,6 +3,7 @@ use futures_util::{SinkExt, StreamExt};
 use reqwest::header::{AUTHORIZATION, USER_AGENT};
 use tokio::{net::TcpStream, sync::Mutex, task::JoinHandle, time::{self, Duration}};
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, tungstenite::Message::{self, Text}};
+use tracing::info;
 
 use crate::ws::{structs::*, opcodes::Opcode};
 
@@ -57,10 +58,9 @@ impl Bot {
         .send().await?;
 
         
-        // swap println for "proper" logging later
-        println!("Status: {}", response.status());
+        info!("Status: {}", response.status());
         let body: String = response.text().await?.trim().to_string();
-        println!("Response:\n{}", body);
+        info!("Response:\n{}", body);
         let url: GatewayResponse = serde_json::from_str(&body).unwrap();
         let url = format!("{}/?v=10&encoding=json", url.url);
         let (ws_stream, _) = tokio_tungstenite::connect_async(&url).await?;
@@ -76,7 +76,7 @@ impl Bot {
                 if event_name == "MESSAGE_CREATE" {
                     let content = json["d"]["content"].as_str().unwrap_or("");
                     let author = json["d"]["author"]["username"].as_str().unwrap_or("");
-                    println!("Message from {}: {}", author, content);
+                    info!("Message from {}: {}", author, content);
                 }
                 */
                 
@@ -89,8 +89,8 @@ impl Bot {
         let event_name = json["t"].as_str().unwrap_or("UNKNOWN");
         self.update_s(json["s"].as_u64().unwrap_or(0)).await;
         let payload = json["d"].to_owned();
-        println!("Dispatch event: {}", event_name);
-        println!("Payload: {}", payload);
+        info!("Dispatch event: {}", event_name);
+        info!("Payload: {}", serde_json::to_string_pretty(&payload).unwrap());
     }
 
     pub async fn get_s(&self) -> Option<u64> {
