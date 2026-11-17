@@ -63,6 +63,7 @@ use crate::ws::{bot::Bot, intents};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
+    tracing_subscriber::fmt::init();
     let token: String = std::fs::read_to_string("./TOKEN.txt").unwrap();
     let bot: Bot = Bot::new(&token, intents::ALL);
     let _ = bot.start_blocking().await;

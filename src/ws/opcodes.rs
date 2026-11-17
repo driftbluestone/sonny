@@ -1,3 +1,5 @@
+use tracing::info;
+
 use crate::ws::{structs::*, bot::*};
 
 type Json = serde_json::Value;
@@ -61,7 +63,7 @@ impl Opcode for Bot {
             4012 => self.opcode_4012(content).await,
             4013 => self.opcode_4013(content).await,
             4014 => self.opcode_4014(content).await,
-            _ => println!("Recieved unimplemented opcode: {}", op)
+            _ => info!("Recieved unimplemented opcode: {}", op)
         }
     }
 
@@ -77,7 +79,7 @@ impl Opcode for Bot {
 
     async fn opcode_10(&self, content: Json) {
         let interval = content["d"]["heartbeat_interval"].as_u64().unwrap_or(41351);
-            println!("Received Hello. Heartbeat interval: {}ms", interval);
+            info!("Received Hello. Heartbeat interval: {}ms", interval);
 
             // Send Identify (Opcode 2)
             let identify: GatewayPayload<IdentifyData> = GatewayPayload {
@@ -95,7 +97,7 @@ impl Opcode for Bot {
 
             let payload_str = serde_json::to_string(&identify).unwrap();
             self.send(tokio_tungstenite::tungstenite::Message::Text(payload_str.into())).await;
-            println!("did the identify");
+            info!("did the identify");
 
             let bot = self.clone();
             tokio::spawn(async move {
