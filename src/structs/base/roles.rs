@@ -27,13 +27,21 @@ struct Color {
     tertiary_color: Option<u32>,
 }
 
-/// Reference: https://docs.discord.com/developers/topics/permissions#role-object-role-colors-object
+pub fn present<'de, D: Deserializer<'de>>(d: D) -> Result<bool, D::Error> {
+    serde::de::IgnoredAny::deserialize(d)?;
+    Ok(true)
+}
+
+/// Reference: https://docs.discord.com/developers/topics/permissions#role-object-role-tags-structure
 #[derive(Serialize, Deserialize)]
 struct RoleTags {
     bot_id: Option<Snowflake>,
     integration_id: Option<Snowflake>,
-    premium_subscriber: Option<bool>, // TBI: null value means true, no key means false
+    #[serde(deserialize_with = "present")]
+    premium_subscriber: bool,
     subscription_listing_id: Option<Snowflake>,
-    available_for_purchase: Option<bool>,  // TBI: null value means true, no key means false
-    guild_connections: Option<bool>,  // TBI: null value means true, no key means false
+    #[serde(deserialize_with = "present")]
+    available_for_purchase: bool,
+    #[serde(deserialize_with = "present")]
+    guild_connections: bool,
 }
