@@ -25,6 +25,8 @@ mod gateway_events {
     mod application_commands;
     mod messages;
 }
+// currently for testing the proc macro attribute
+mod app_commands;
 
 use std::error::Error;
 
@@ -63,9 +65,15 @@ use crate::ws::{bot::Bot, intents};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    tracing_subscriber::fmt::init();
-    let token: String = std::fs::read_to_string("./TOKEN.txt").unwrap();
-    let bot: Bot = Bot::new(&token, intents::ALL);
-    let _ = bot.start_blocking().await;
+    let mut args: Vec<Box<dyn std::any::Any + std::marker::Send + Sync + 'static>> = Vec::new();
+    args.push(Box::new(4i32));
+    app_commands::test(args);
     Ok(())
 }
+
+//     tracing_subscriber::fmt::init();
+//     let token: String = std::fs::read_to_string("./TOKEN.txt").unwrap();
+//     let bot: Bot = Bot::new(&token, intents::ALL);
+//     let _ = bot.start_blocking().await;
+//     Ok(())
+// }
