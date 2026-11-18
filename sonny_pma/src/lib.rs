@@ -44,13 +44,16 @@ pub fn app_command(_: TokenStream, input: TokenStream) -> TokenStream {
     }
 
     let expanded = quote! {
-        #vis fn #fn_name
-            (args: Vec<Box<dyn std::any::Any + Send + Sync>>)
-            -> () {
+    #vis fn #fn_name(
+        args: Vec<Box<dyn std::any::Any + Send + Sync>>
+    ) -> ::std::pin::Pin<::std::boxed::Box<dyn ::std::future::Future<Output = ()> + Send + Sync + 'static>> {
+        ::std::boxed::Box::pin(async move {
             let mut __args_iter = args.into_iter();
             #(#unpack_stmts)*
-            #block
-        }
-    };
+            #block;
+            ()
+        })
+    }
+};
     TokenStream::from(expanded)
 }

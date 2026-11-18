@@ -28,7 +28,7 @@ mod gateway_events {
 // currently for testing the proc macro attribute
 mod app_commands;
 
-use std::error::Error;
+use std::{error::Error, pin::Pin};
 
 use crate::ws::{bot::Bot, intents};
 /**
@@ -63,17 +63,22 @@ use crate::ws::{bot::Bot, intents};
  * ...oh.
  */
 
+type AppCommand = dyn Fn(Vec<Box<dyn std::any::Any + std::marker::Send + Sync + 'static>>) -> Pin<Box<dyn Future<Output = ()> + Send + Sync + 'static>>;
+type AppCommandArgs = Vec<Box<dyn std::any::Any + std::marker::Send + Sync + 'static>>;
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    let mut args: Vec<Box<dyn std::any::Any + std::marker::Send + Sync + 'static>> = Vec::new();
+    // registry experiments
+    let mut args: AppCommandArgs = Vec::new();
     args.push(Box::new(4i32));
-    app_commands::test(args);
+    app_commands::test(args).await;
+    let mut test: Vec<Box<AppCommand>> = Vec::new();
+    test.push(Box::new(app_commands::test));
+
+    // bot experiments
+    tracing_subscriber::fmt::init();
+    let token: String = std::fs::read_to_string("./TOKEN.txt").unwrap();
+    let bot: Bot = Bot::new(&token, intents::ALL);
+    let _ = bot.start_blocking().await;
     Ok(())
 }
-
-//     tracing_subscriber::fmt::init();
-//     let token: String = std::fs::read_to_string("./TOKEN.txt").unwrap();
-//     let bot: Bot = Bot::new(&token, intents::ALL);
-//     let _ = bot.start_blocking().await;
-//     Ok(())
-// }
