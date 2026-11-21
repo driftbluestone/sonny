@@ -8,11 +8,9 @@ pub fn app_command(_: TokenStream, input: TokenStream) -> TokenStream {
     let func: ItemFn = parse_macro_input!(input as ItemFn);
     let vis = &func.vis;
     let fn_name = &func.sig.ident;
-
     let block = &func.block;
 
     let mut unpack_stmts = Vec::new();
-
     for (index, arg) in func.sig.inputs.iter().enumerate() {
         match arg {
             FnArg::Typed(pat_type) => {
@@ -43,15 +41,24 @@ pub fn app_command(_: TokenStream, input: TokenStream) -> TokenStream {
         }
     }
 
+    // func info strings
+    let fn_str = fn_name.to_string();
+
     let expanded = quote! {
     #vis fn #fn_name(
-        args: Vec<Box<dyn std::any::Any + Send + Sync>>
-    ) -> ::std::pin::Pin<::std::boxed::Box<dyn ::std::future::Future<Output = ()> + Send + Sync + 'static>> {
+        args: Option<Vec<Box<dyn std::any::Any + Send + Sync>>>
+    ) -> ::std::pin::Pin<::std::boxed::Box<dyn ::std::future::Future<Output = Option<Vec<Vec<String>>>> + Send + Sync + 'static>> {
         ::std::boxed::Box::pin(async move {
-            let mut __args_iter = args.into_iter();
+            if args.is_none() {
+                return Some(vec![
+                    // func info strings
+                    vec![#fn_str.to_string()],
+                ]);
+            }
+            let mut __args_iter = args.unwrap().into_iter();
             #(#unpack_stmts)*
             #block;
-            ()
+            None
         })
     }
 };

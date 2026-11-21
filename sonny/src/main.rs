@@ -63,7 +63,7 @@ use crate::ws::{bot::Bot, intents};
  * ...oh.
  */
 
-type AppCommand = dyn Fn(Vec<Box<dyn std::any::Any + std::marker::Send + Sync + 'static>>) -> Pin<Box<dyn Future<Output = ()> + Send + Sync + 'static>>;
+type AppCommand = dyn Fn(Option<Vec<Box<dyn std::any::Any + std::marker::Send + Sync + 'static>>>) -> Pin<Box<dyn Future<Output = Option<Vec<Vec<String>>>> + Send + Sync + 'static>>;
 type AppCommandArgs = Vec<Box<dyn std::any::Any + std::marker::Send + Sync + 'static>>;
 
 #[tokio::main]
@@ -71,7 +71,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     // registry experiments
     let mut args: AppCommandArgs = Vec::new();
     args.push(Box::new(4i32));
-    app_commands::test(args).await;
+    app_commands::test(Some(args)).await;
     let mut test: Vec<Box<AppCommand>> = Vec::new();
     test.push(Box::new(app_commands::test));
 
